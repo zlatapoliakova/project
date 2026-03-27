@@ -1,8 +1,7 @@
 import { Trash2, ExternalLink } from "lucide-react";
 
 export default function ProjectCard({ project, onDelete, onClick }) {
-
-  const { title, image, category, description, link } = project.data;
+  const { title, image, category, description, link, _id } = project;
 
   return (
     <div
@@ -13,6 +12,7 @@ export default function ProjectCard({ project, onDelete, onClick }) {
         {image ? (
           <img
             src={image}
+            alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition"
           />
         ) : (
@@ -24,9 +24,9 @@ export default function ProjectCard({ project, onDelete, onClick }) {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(project.id);
+            onDelete(_id); 
           }}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition"
+          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition hover:bg-red-50"
         >
           <Trash2 size={16} className="text-red-500" />
         </button>
@@ -37,13 +37,15 @@ export default function ProjectCard({ project, onDelete, onClick }) {
           {title || "Untitled Project"}
         </h4>
 
-        <p className="text-xs text-indigo-600 uppercase mb-2">
+        <p className="text-xs text-indigo-600 uppercase mb-2 font-semibold">
           {category || "General"}
         </p>
 
-        <p className="text-sm text-gray-500 line-clamp-2">
-          {description}
-        </p>
+        {description && (
+          <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+            {description}
+          </p>
+        )}
 
         {link && (
           <a
@@ -51,7 +53,7 @@ export default function ProjectCard({ project, onDelete, onClick }) {
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="text-indigo-600 text-sm mt-2 inline-flex items-center gap-1"
+            className="text-indigo-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
           >
             Visit <ExternalLink size={14} />
           </a>

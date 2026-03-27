@@ -2,13 +2,15 @@ import { useState } from "react";
 import { X, Upload } from "lucide-react";
 
 export default function EditProjectModal({ project, onClose, onSave }) {
-
+  const [loading, setLoading] = useState(false);
+  
   const [form, setForm] = useState({
-    title: project.data.title,
-    description: project.data.description,
-    image: project.data.image,
-    link: project.data.link,
-    category: project.data.category,
+    title: project?.title || "",
+    description: project?.description || "",
+    image: project?.image || "",
+    link: project?.link || "",
+    category: project?.category || "",
+    file: null, 
   });
 
   const handleChange = (e) => {
@@ -21,28 +23,49 @@ export default function EditProjectModal({ project, onClose, onSave }) {
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onloadend = () => {
-      setForm({ ...form, image: reader.result });
+      setForm({ ...form, image: reader.result, file: file });
     };
-
     reader.readAsDataURL(file);
   };
 
-  const handleSave = () => {
-    const updatedProject = {
-      ...project,
-      data: form,
-    };
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("title", form.title);
+      formData.append("description", form.description);
+      formData.append("link", form.link);
+      formData.append("category", form.category);
+      
+      if (form.file) {
+        formData.append("image", form.file);
+      }
 
-    onSave(updatedProject);
-    onClose();
+      const response = await fetch(`http://localhost:5000/api/projects/${project._id}`, {
+        method: "PUT",
+        body: formData, 
+      });
+
+      if (response.ok) {
+        const updatedProject = await response.json();
+        onSave(updatedProject); 
+        onClose();
+      } else {
+        alert("Помилка при оновленні проєкту");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      alert("Не вдалося підключитися до сервера");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[80]"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm p-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -50,19 +73,18 @@ export default function EditProjectModal({ project, onClose, onSave }) {
       >
         <div className="flex justify-between mb-6">
           <h2 className="text-xl font-bold">Edit Project</h2>
-          <button onClick={onClose}>
+          <button onClick={onClose} className="hover:bg-gray-100 p-1 rounded-full transition">
             <X />
           </button>
         </div>
 
         <div className="space-y-4">
-
           <div className="flex flex-col items-center border-2 border-dashed p-4 rounded-lg bg-gray-50">
             {form.image ? (
               <img
                 src={form.image}
                 alt="preview"
-                className="w-full h-40 object-cover rounded mb-3"
+                className="w-full h-40 object-cover rounded mb-3 shadow-sm"
               />
             ) : (
               <div className="h-40 flex items-center justify-center text-gray-400">
@@ -70,7 +92,7 @@ export default function EditProjectModal({ project, onClose, onSave }) {
               </div>
             )}
 
-            <label className="bg-indigo-600 text-white px-4 py-2 rounded cursor-pointer text-sm">
+            <label className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded cursor-pointer text-sm font-medium transition">
               Change Image
               <input
                 type="file"
@@ -81,45 +103,48 @@ export default function EditProjectModal({ project, onClose, onSave }) {
             </label>
           </div>
 
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Project title"
-          />
+          <div className="space-y-3">
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Project title"
+            />
 
-          <input
-            name="link"
-            value={form.link}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Project link"
-          />
+            <input
+              name="link"
+              value={form.link}
+              onChange={handleChange}
+              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Project link"
+            />
 
-          <input
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Category"
-          />
+            <input
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Category"
+            />
 
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            placeholder="Description"
-          />
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              placeholder="Description"
+            />
+          </div>
 
           <button
             onClick={handleSave}
-            className="w-full bg-indigo-600 text-white py-2 rounded"
+            disabled={loading}
+            className={`w-full ${loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-3 rounded-xl font-bold transition-all shadow-md`}
           >
-            Save Changes
+            {loading ? "Saving..." : "Save Changes"}
           </button>
-
         </div>
       </div>
     </div>

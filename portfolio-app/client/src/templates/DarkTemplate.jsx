@@ -1,183 +1,329 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Upload, ArrowLeft, Trash2, ExternalLink, Edit3, Check, Camera, Share2 } from "lucide-react";
+import { 
+  Upload, ArrowLeft, Trash2, Edit3, Check, Camera, 
+  Share2, Plus, GraduationCap, Briefcase, ExternalLink 
+} from "lucide-react";
 
-export default function DarkTemplate({ id: propId, readOnly = false }) {
+import { useAuth } from "../context/AuthContext";
+
+export default function DarkTemplate({ initialData, id: propId, readOnly = false }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { id: urlId } = useParams();
   const id = propId || urlId;
 
-  const [resume, setResume] = useState(() => {
-    const allPortfolios = JSON.parse(localStorage.getItem("myPortfolios")) || [];
-    const existing = allPortfolios.find(item => String(item.id) === String(id));
-    if (existing) return existing.data;
+  const userId = user?.id || user?._id || null;
+  const isOwner = !!(userId && initialData && (userId === (initialData.owner?._id || initialData.owner)));
 
-    const savedProfile = JSON.parse(localStorage.getItem("userProfile")) || {};
-    const savedAvatar = localStorage.getItem("userAvatar") || "";
-    const globalProjects = allPortfolios
-      .filter(item => item.type === "projects")
-      .map(item => ({
-        id: item.id, title: item.data.title, description: item.data.description,
-        image: item.data.image, link: item.data.link, category: item.data.category || "Development"
-      }));
-
-    return {
-      name: `${savedProfile.name || ""} ${savedProfile.surname || ""}`.trim() || "Your Name",
-      profession: savedProfile.profession || "Creative Expert",
-      bio: savedProfile.about || "Focusing on high-end digital solutions and dark aesthetics.",
-      avatar: savedAvatar || "", projects: globalProjects, experiences: [], education: "",
-    };
+  const [resume, setResume] = useState({
+    name: "Name",
+    surname: "Surname",
+    profession: "Creative Expert",
+    bio: "Focusing on high-end digital solutions and dark aesthetics.",
+    avatar: "",
+    projects: [],
+    experiences: [],
+    education: [],
   });
 
-  const [isEditing, setIsEditing] = useState(readOnly ? false : (id ? false : true));
-  const [newProject, setNewProject] = useState({ title: "", link: "", image: "", category: "" });
-  const [newExp, setNewExp] = useState({ position: "", years: "", description: "" });
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const saveResume = () => {
-    const saved = JSON.parse(localStorage.getItem("myPortfolios")) || [];
-    const currentId = id || Date.now();
-    
-    const portfolioEntry = {
-      id: currentId,
-      type: "portfolio",
-      template: "dark",
-      data: resume,
-      projects: resume.projects || [] 
-    };
+  const [newExp, setNewExp] = useState({ title: "", year: "", desc: "" });
+  const [newEdu, setNewEdu] = useState({ school: "", year: "", degree: "" });
+  const [newProject, setNewProject] = useState({ title: "", description: "", link: "", image: "", category: "", file: null });
 
-    const updated = saved.some(p => String(p.id) === String(currentId))
-      ? saved.map(p => String(p.id) === String(currentId) ? portfolioEntry : p)
-      : [...saved, portfolioEntry];
-    
-    localStorage.setItem("myPortfolios", JSON.stringify(updated));
-    setIsEditing(false);
-    if (!id) navigate(`/portfolio-editor/${currentId}`);
+  useEffect(() => {
+    if (initialData) {
+      setResume({
+        name: initialData.data?.name || "Name",
+        surname: initialData.data?.surname || "Surname",
+        profession: initialData.data?.profession || "",
+        bio: initialData.data?.bio || "",
+        avatar: initialData.data?.avatar || "",
+        projects: initialData.projects || [],
+        experiences: initialData.data?.experiences || [],
+        education: initialData.data?.education || [],
+      });
+    }
+  }, [initialData]);
+
+  const handleShare = () => {
+    const viewUrl = `${window.location.origin}/view-portfolio/${id}`;
+    navigator.clipboard.writeText(viewUrl);
+    alert("Публічне посилання скопійовано!");
   };
 
-  const copyShareLink = () => {
-    const url = `${window.location.origin}/view-portfolio/${id}`;
-    navigator.clipboard.writeText(url);
-    alert("Share link copied!");
+  const handleAddProjectToDB = async () => {
+    if (!newProject.title.trim()) return alert("Введіть назву проєкту");
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("owner", userId);
+    formData.append("title", newProject.title);
+    formData.append("description", newProject.description);
+    formData.append("category", newProject.category);
+    formData.append("link", newProject.link);
+    formData.append("type", "projects"); 
+    if (newProject.file) formData.append("image", newProject.file);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/projects/add", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (res.ok) {
+        const savedProject = await res.json();
+        setResume(prev => ({ ...prev, projects: [...prev.projects, savedProject] }));
+        setNewProject({ title: "", description: "", link: "", image: "", category: "", file: null });
+        alert("Проєкт додано!");
+      }
+    } catch (error) { console.error(error); } finally { setLoading(false); }
+  };
+
+  const saveResume = async () => {
+    setLoading(true);
+    const payload = {
+      title: `${resume.name} ${resume.surname}`,
+      data: resume,
+      projects: resume.projects.map(p => p._id || p.id)
+    };
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/portfolios/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setIsEditing(false);
+        alert("Зміни збережено!");
+      }
+    } catch (error) { console.error("Save error:", error); } finally { setLoading(false); }
+  };
+
+  const getFullImg = (path) => {
+    if (!path) return "";
+    return path.startsWith('http') || path.startsWith('data:') ? path : `http://localhost:5000${path}`;
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-sans selection:bg-indigo-500">
-      <div className="fixed top-6 right-6 z-50 flex gap-3">
-        {id && !isEditing && (
-          <button onClick={copyShareLink} className="bg-indigo-600 text-white px-5 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:bg-indigo-700 transition-all">
-            <Share2 size={18} /> Share
+      
+      {isOwner && !readOnly && (
+        <div className="fixed top-6 right-6 z-50 flex gap-3 print:hidden">
+          <button onClick={() => navigate(`/profile/${userId}`)} className="bg-gray-800 p-3 rounded-full border border-gray-700 hover:bg-gray-700 transition">
+            <ArrowLeft size={20} />
           </button>
-        )}
-        {!readOnly && (
-          <>
-            <button onClick={() => navigate("/profile")} className="bg-gray-800 p-3 rounded-full border border-gray-700"><ArrowLeft size={20} /></button>
-            {!isEditing ? (
-              <button onClick={() => setIsEditing(true)} className="bg-white text-black px-6 py-2 rounded-full flex items-center gap-2 font-bold"><Edit3 size={18} /> Edit</button>
-            ) : (
-              <button onClick={saveResume} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"><Check size={18} /> Save</button>
-            )}
-          </>
-        )}
-      </div>
+          <button onClick={handleShare} className="bg-gray-800 p-3 rounded-full border border-gray-700 text-indigo-400 hover:bg-gray-700 transition">
+            <Share2 size={20} />
+          </button>
+          {!isEditing ? (
+            <button onClick={() => setIsEditing(true)} className="bg-white text-black px-6 py-2 rounded-full flex items-center gap-2 font-bold shadow-xl hover:scale-105 transition">
+              <Edit3 size={18} /> Edit
+            </button>
+          ) : (
+            <button onClick={saveResume} disabled={loading} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 font-bold hover:bg-indigo-700 shadow-lg transition">
+              <Check size={18} /> {loading ? "Saving..." : "Save Changes"}
+            </button>
+          )}
+        </div>
+      )}
 
       <header className="max-w-5xl mx-auto pt-24 pb-16 px-8 text-center">
         <div className="relative w-40 h-40 mx-auto mb-8">
           <div className="w-full h-full rounded-full border-4 border-indigo-500/30 overflow-hidden bg-gray-800 flex items-center justify-center">
-            {resume.avatar ? <img src={resume.avatar} alt="User" className="w-full h-full object-cover" /> : <Camera size={48} className="text-gray-600" />}
+            {resume.avatar ? <img src={getFullImg(resume.avatar)} alt="User" className="w-full h-full object-cover" /> : <Camera size={48} className="text-gray-700" />}
           </div>
-          {isEditing && <label className="absolute bottom-1 right-1 bg-indigo-600 p-2.5 rounded-full cursor-pointer hover:bg-indigo-500 transition shadow-lg"><Upload size={18} /><input type="file" accept="image/*" className="hidden" onChange={e => {
-            const reader = new FileReader();
-            reader.onloadend = () => setResume({...resume, avatar: reader.result});
-            reader.readAsDataURL(e.target.files[0]);
-          }} /></label>}
+          {isEditing && (
+            <label className="absolute bottom-1 right-1 bg-indigo-600 p-2.5 rounded-full cursor-pointer hover:bg-indigo-500 transition shadow-lg">
+              <Upload size={18} />
+              <input type="file" className="hidden" accept="image/*" onChange={e => {
+                const reader = new FileReader();
+                reader.onloadend = () => setResume({...resume, avatar: reader.result});
+                reader.readAsDataURL(e.target.files[0]);
+              }} />
+            </label>
+          )}
         </div>
 
         {isEditing ? (
-          <div className="space-y-4 max-w-2xl mx-auto">
-            <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="text-4xl font-black text-center w-full bg-transparent border-b border-gray-800 focus:border-indigo-500 outline-none pb-2" />
-            <input value={resume.profession} onChange={e => setResume({...resume, profession: e.target.value})} className="text-xl text-indigo-400 text-center w-full bg-transparent outline-none" />
-            <textarea value={resume.bio} onChange={e => setResume({...resume, bio: e.target.value})} className="text-gray-400 text-center w-full bg-transparent outline-none italic resize-none" rows="3" />
+          <div className="space-y-6 max-w-2xl mx-auto text-left">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">First Name</label>
+                <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-xl" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">Last Name</label>
+                <input value={resume.surname} onChange={e => setResume({...resume, surname: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-xl" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">Profession</label>
+              <input value={resume.profession} onChange={e => setResume({...resume, profession: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-indigo-400" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">Bio Summary</label>
+              <textarea value={resume.bio} onChange={e => setResume({...resume, bio: e.target.value})} className="bg-gray-900 border border-gray-800 rounded-xl p-4 outline-none focus:border-indigo-500 h-24 resize-none italic" />
+            </div>
           </div>
         ) : (
           <>
-            <h1 className="text-5xl font-black mb-2 tracking-tight uppercase">{resume.name}</h1>
+            <h1 className="text-5xl font-black mb-2 tracking-tight uppercase">{resume.name} {resume.surname}</h1>
             <p className="text-xl text-indigo-400 font-bold mb-6 tracking-widest uppercase">{resume.profession}</p>
             <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed italic">"{resume.bio}"</p>
           </>
         )}
       </header>
 
-      <section className="max-w-7xl mx-auto py-20 px-8">
-        <h2 className="text-3xl font-black mb-12 flex items-center gap-4">Projects <span className="h-px flex-1 bg-gray-800"></span></h2>
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
-          {resume.projects.map((p) => (
-            <div key={p.id} className="group relative bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden hover:border-indigo-500 transition-all duration-500">
-              {isEditing && <button onClick={() => setResume({...resume, projects: resume.projects.filter(proj => proj.id !== p.id)})} className="absolute top-3 right-3 z-20 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition"><Trash2 size={16} /></button>}
-              <div className="h-56 bg-gray-800 cursor-pointer overflow-hidden" onClick={() => !isEditing && p.link && window.open(p.link, '_blank')}>
-                {p.image ? <img src={p.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" /> : <div className="w-full h-full flex items-center justify-center text-gray-600">No Preview</div>}
-              </div>
-              <div className="p-6">
-                <span className="text-indigo-500 text-[10px] font-black uppercase tracking-[3px]">{p.category}</span>
-                <h3 className="text-xl font-bold mt-1">{p.title}</h3>
-                {!isEditing && <div className="mt-4 flex items-center gap-2 text-gray-500 text-sm font-bold group-hover:text-indigo-400 transition">View Case <ExternalLink size={14}/></div>}
-              </div>
-            </div>
-          ))}
-        </div>
-        {isEditing && (
-          <div className="p-8 bg-gray-900 rounded-3xl border-2 border-dashed border-gray-800">
-            <h3 className="text-xl font-bold mb-6">Add Portfolio Project</h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <input placeholder="Title" value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl outline-none focus:border-indigo-500" />
-                <input placeholder="Link" value={newProject.link} onChange={e => setNewProject({...newProject, link: e.target.value})} className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl outline-none focus:border-indigo-500" />
-              </div>
-              <div className="flex flex-col items-center justify-center bg-gray-950 border border-gray-800 rounded-2xl p-4">
-                {newProject.image ? <img src={newProject.image} className="h-32 rounded-lg" /> : <Upload size={32} className="text-gray-700" />}
-                <label className="mt-4 cursor-pointer text-indigo-400 font-bold text-xs">Upload Photo<input type="file" className="hidden" onChange={e => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => setNewProject({...newProject, image: reader.result});
-                    reader.readAsDataURL(e.target.files[0]);
-                  }} /></label>
-              </div>
-            </div>
-            <button onClick={() => { setResume({...resume, projects: [...resume.projects, {...newProject, id: Date.now()}]}); setNewProject({title:"", link:"", image:"", category:""})}} className="mt-6 w-full bg-indigo-600 py-4 rounded-xl font-black">Add Project</button>
-          </div>
-        )}
-      </section>
-
-      <section className="max-w-6xl mx-auto py-20 px-8 grid md:grid-cols-2 gap-12">
+      <section className="max-w-7xl mx-auto py-20 px-8 grid md:grid-cols-2 gap-16 border-t border-gray-900">
         <div className="space-y-8">
-          <h3 className="text-2xl font-black flex items-center gap-3 underline decoration-indigo-500 decoration-4 underline-offset-8">Experience</h3>
+          <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><Briefcase className="text-indigo-500"/> Experience</h3>
           <div className="space-y-6">
-            {resume.experiences.map((exp) => (
-              <div key={exp.id} className="relative group p-6 bg-gray-900/50 rounded-2xl border border-gray-800">
-                {isEditing && <button onClick={() => setResume({...resume, experiences: resume.experiences.filter(e => e.id !== exp.id)})} className="absolute top-4 right-4 text-red-500 transition"><Trash2 size={18} /></button>}
-                <h4 className="text-xl font-bold">{exp.position}</h4>
-                <span className="text-indigo-500 text-sm font-bold">{exp.years}</span>
-                <p className="text-gray-400 mt-2 text-sm leading-relaxed">{exp.description}</p>
+            {resume.experiences.map((exp, idx) => (
+              <div key={idx} className="relative p-6 bg-gray-900/50 rounded-2xl border border-gray-800 group">
+                <h4 className="text-xl font-bold">{exp.title}</h4>
+                <p className="text-indigo-400 text-sm mb-3">{exp.year}</p>
+                <p className="text-gray-500 text-sm">{exp.desc}</p>
+                {isEditing && <button onClick={() => setResume({...resume, experiences: resume.experiences.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><Trash2 size={18}/></button>}
               </div>
             ))}
           </div>
           {isEditing && (
-            <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
-              <input placeholder="Position" value={newExp.position} onChange={e => setNewExp({...newExp, position: e.target.value})} className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl outline-none" />
-              <input placeholder="Years" value={newExp.years} onChange={e => setNewExp({...newExp, years: e.target.value})} className="w-full bg-gray-950 border border-gray-800 p-3 rounded-xl outline-none" />
-              <button onClick={() => { setResume({...resume, experiences: [...resume.experiences, {...newExp, id: Date.now()}]}); setNewExp({position:"", years:"", description:""})}} className="w-full bg-gray-800 text-white py-3 rounded-xl font-bold">Add Exp</button>
+            <div className="p-6 bg-gray-900 rounded-2xl space-y-4 border border-indigo-500/20">
+              <input placeholder="Position" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder="Year" value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <button onClick={() => { if(!newExp.title) return; setResume({...resume, experiences: [...resume.experiences, newExp]}); setNewExp({title:"", year:"", desc:""})}} className="w-full bg-indigo-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition">
+                <Plus size={18}/> Add Experience
+              </button>
             </div>
           )}
         </div>
 
         <div className="space-y-8">
-          <h3 className="text-2xl font-black flex items-center gap-3 underline decoration-indigo-500 decoration-4 underline-offset-8">Education</h3>
-          <div className="bg-gray-900 p-8 rounded-3xl border border-gray-800 h-full">
-            {isEditing ? <textarea value={resume.education} onChange={(e) => setResume({ ...resume, education: e.target.value })} className="w-full h-40 bg-transparent border border-gray-800 p-4 rounded-xl outline-none focus:border-indigo-500 transition" /> : <p className="text-gray-400 leading-relaxed whitespace-pre-wrap font-medium">{resume.education || "No education info."}</p>}
+          <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><GraduationCap className="text-indigo-500"/> Education</h3>
+          <div className="space-y-6">
+            {resume.education.map((edu, idx) => (
+              <div key={idx} className="relative p-6 bg-gray-900/50 rounded-2xl border border-gray-800 group">
+                <h4 className="text-xl font-bold">{edu.school}</h4>
+                <p className="text-indigo-400 text-sm mb-1">{edu.year}</p>
+                <p className="text-gray-500 text-sm">{edu.degree}</p>
+                {isEditing && <button onClick={() => setResume({...resume, education: resume.education.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><Trash2 size={18}/></button>}
+              </div>
+            ))}
           </div>
+          {isEditing && (
+            <div className="p-6 bg-gray-900 rounded-2xl space-y-4 border border-indigo-500/20">
+              <input placeholder="University" value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder="Degree" value={newEdu.degree} onChange={e => setNewEdu({...newEdu, degree: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <button onClick={() => { if(!newEdu.school) return; setResume({...resume, education: [...resume.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition">
+                <Plus size={18}/> Add Education
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
+      <section className="max-w-7xl mx-auto py-20 px-8 border-t border-gray-900">
+        <h2 className="text-4xl font-black mb-12 uppercase tracking-tighter text-indigo-500">Selected Projects</h2>
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {resume.projects.map((p, idx) => (
+            <div 
+              key={p._id || idx} 
+              onClick={() => {
+                if (!isEditing && p.link) {
+                  const url = p.link.startsWith('http') ? p.link : `https://${p.link}`;
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className={`group relative bg-gray-900 rounded-3xl border border-gray-800 overflow-hidden hover:border-indigo-500 transition-all duration-500 ${!isEditing && p.link ? 'cursor-pointer' : ''}`}
+            >
+              {isEditing && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setResume({...resume, projects: resume.projects.filter((_, i) => i !== idx)});
+                  }} 
+                  className="absolute top-4 right-4 z-20 p-2 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition shadow-lg"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+              <div className="h-60 bg-gray-800 relative overflow-hidden">
+                {p.image ? (
+                  <img src={getFullImg(p.image)} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={p.title} />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-700">No Image</div>
+                )}
+                {!isEditing && p.link && (
+                  <div className="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <ExternalLink size={32} className="text-white" />
+                  </div>
+                )}
+              </div>
+              <div className="p-8">
+                <span className="text-indigo-500 text-[10px] font-black uppercase tracking-[3px] mb-2 block">{p.category}</span>
+                <h3 className="text-2xl font-bold">{p.title}</h3>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {isEditing && isOwner && (
+          <div className="p-10 bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-800">
+            <h3 className="text-2xl font-black mb-10 text-center uppercase tracking-widest text-white">Add New Project</h3>
+            <div className="grid md:grid-cols-2 gap-12 text-left">
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">Project Title *</label>
+                  <input placeholder="Project Name" value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-4 outline-none w-full focus:border-indigo-500 rounded-lg" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">URL Link</label>
+                  <input placeholder="https://..." value={newProject.link} onChange={e => setNewProject({...newProject, link: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-4 outline-none w-full focus:border-indigo-500 rounded-lg" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">Description</label>
+                  <textarea placeholder="Describe your work" value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} className="bg-gray-900 border border-gray-800 p-4 w-full h-24 outline-none focus:border-indigo-500 rounded-xl resize-none" />
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 mb-2">Project Cover</label>
+                <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 rounded-3xl border-2 border-dashed border-gray-800 p-8 relative min-h-[300px]">
+                  {newProject.image ? (
+                    <div className="relative w-full h-full">
+                      <img src={newProject.image} className="h-full w-full object-cover rounded-2xl" alt="Preview" />
+                      <button onClick={() => setNewProject({...newProject, image: "", file: null})} className="absolute top-4 right-4 bg-red-500 p-2 rounded-full shadow-2xl"><Trash2 size={16}/></button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload size={48} className="text-gray-800 mb-4" />
+                      <p className="text-gray-500 text-sm">Click to upload image</p>
+                    </>
+                  )}
+                  <label className="mt-6 cursor-pointer bg-white text-black px-10 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-lg active:scale-95">
+                    {newProject.image ? "Change Image" : "Upload Image"}
+                    <input type="file" className="hidden" accept="image/*" onChange={e => {
+                      const file = e.target.files[0];
+                      if (file) setNewProject({...newProject, file, image: URL.createObjectURL(file)});
+                    }} />
+                  </label>
+                </div>
+              </div>
+            </div>
+            <button onClick={handleAddProjectToDB} disabled={loading} className="mt-12 w-full bg-indigo-600 text-white py-6 rounded-2xl font-black uppercase tracking-[4px] hover:bg-indigo-700 shadow-2xl transition disabled:bg-gray-800">
+              {loading ? "Processing..." : "Create & Sync Project"}
+            </button>
+          </div>
+        )}
+      </section>
+
       <footer className="py-20 text-center border-t border-gray-900">
-        <p className="text-gray-600 font-bold uppercase tracking-widest text-[10px]">© {new Date().getFullYear()} {resume.name}</p>
+        <p className="text-gray-600 font-bold uppercase tracking-widest text-[10px]">© {new Date().getFullYear()} {resume.name} {resume.surname}</p>
       </footer>
     </div>
   );

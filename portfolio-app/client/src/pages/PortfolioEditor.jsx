@@ -1,56 +1,53 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-
+import { useParams, useNavigate } from "react-router-dom";
 import MinimalTemplate from "../templates/MinimalTemplate";
 import GridTemplate from "../templates/GridTemplate";
 import DarkTemplate from "../templates/DarkTemplate";
 
 function PortfolioEditor() {
   const { id } = useParams();
-  const [template, setTemplate] = useState(null);
+  const navigate = useNavigate();
   const [portfolioData, setPortfolioData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      const saved = JSON.parse(localStorage.getItem("myPortfolios")) || [];
-      const found = saved.find((p) => String(p.id) === String(id));
-      if (found) {
-        setTemplate({ id: found.template || "minimal" });
-        setPortfolioData({ ...found.data, projects: found.projects || [] });
-        return;
+    const fetchPortfolio = async () => {
+      if (!id) return navigate("/templates");
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/portfolios/${id}`);
+        const data = await response.json();
+
+        if (response.ok) {
+          setPortfolioData(data);
+        } else {
+          navigate("/templates");
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    const savedTemplate = localStorage.getItem("selectedTemplate");
-    const savedPortfolio = localStorage.getItem("selectedPortfolio");
-    if (savedTemplate) setTemplate(JSON.parse(savedTemplate));
-    if (savedPortfolio) setPortfolioData(JSON.parse(savedPortfolio));
-  }, [id]);
+    fetchPortfolio();
+  }, [id, navigate]);
 
-  if (!template) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-xl">Loading template...</p>
-          <button
-            onClick={() => window.history.back()}
-            className="mt-4 text-indigo-600 underline"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
+  if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
+  if (!portfolioData) return <div className="h-screen flex items-center justify-center">Portfolio not found</div>;
+
+  const props = { initialData: portfolioData, id };
+
+  switch (portfolioData.template?.toLowerCase()) {
+    case "minimal":
+      return <MinimalTemplate {...props} />;
+    case "grid":
+      return <GridTemplate {...props} />;
+    case "dark":
+      return <DarkTemplate {...props} />;
+    default:
+      return <div>Unknown template</div>;
   }
-
-  const templateId = template.id?.toLowerCase() || "minimal";
-  const props = { initialData: portfolioData, id: id };
-
-  if (templateId === "minimal") return <MinimalTemplate {...props} />;
-  if (templateId === "grid") return <GridTemplate {...props} />;
-  if (templateId === "dark") return <DarkTemplate {...props} />;
-
-  return <div className="p-20 text-center">Template "{templateId}" not found</div>;
 }
 
 export default PortfolioEditor;

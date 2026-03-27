@@ -1,24 +1,13 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
+
 import CreateProjectModal from "../modals/CreateProjectModal";
 
-function AddProjectButton() {
+function AddProjectButton({ onSave }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSave = (data) => {
-    const savedPortfolios = JSON.parse(localStorage.getItem("myPortfolios")) || [];
-    
-    const newProject = { 
-      id: Date.now(), 
-      type: "projects", 
-      data 
-    };
-    
-    const updated = [...savedPortfolios, newProject];
-    localStorage.setItem("myPortfolios", JSON.stringify(updated));
-
-    window.dispatchEvent(new Event("portfolioUpdated"));
-
+  const handleProjectSaved = (newProject) => {
+    if (onSave) onSave(newProject);
     setIsModalOpen(false);
   };
 
@@ -26,16 +15,16 @@ function AddProjectButton() {
     <>
       <button
         onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg shadow-indigo-100 active:scale-95"
       >
         <Plus size={18} />
-        Add Project
+        <span className="hidden md:inline">Add Project</span>
       </button>
 
       {isModalOpen && (
         <CreateProjectModal 
           onClose={() => setIsModalOpen(false)} 
-          onSave={handleSave}
+          onSave={handleProjectSaved}
         />
       )}
     </>

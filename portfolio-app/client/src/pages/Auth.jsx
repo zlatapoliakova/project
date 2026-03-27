@@ -1,91 +1,149 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function Auth({ mode }) {
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(mode === "login");
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    name: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
 
   useEffect(() => {
     setIsLogin(mode === "login");
   }, [mode]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-10 rounded-2xl shadow-lg w-full max-w-md">
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-        <h1 className="text-3xl font-bold text-center mb-6">
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const url = isLogin
+      ? "http://localhost:5000/api/auth/login"
+      : "http://localhost:5000/api/auth/register";
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: isLogin ? undefined : `${formData.name} ${formData.lastName}`.trim(),
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        const userId = data.user.id || data.user._id;
+
+        login(data.user, data.token);
+
+        navigate(`/profile/${userId}`);
+        
+      } else {
+        alert(data.message || "Помилка авторизації");
+      }
+    } catch (error) {
+      console.error("Auth error:", error);
+      alert("Сервер не відповідає");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+      <div className="bg-white p-10 rounded-2xl shadow-lg w-full max-w-md">
+        <h1
+          className="text-3xl font-bold text-center mb-6 text-indigo-600 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           Portify
         </h1>
 
-        <h2 className="text-xl font-semibold text-center mb-2">
+        <h2 className="text-xl font-semibold text-center mb-6">
           {isLogin ? "Welcome Back" : "Create Account"}
         </h2>
 
-        <p className="text-gray-500 text-center mb-6">
-          {isLogin
-            ? "Enter your email and password to login"
-            : "Fill in the form to register"}
-        </p>
-
-        <form className="space-y-5">
-
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {!isLogin && (
-            <>
-              <div>
-                <label className="block mb-1 font-medium">Name</label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700 ml-1">First Name</label>
                 <input
+                  name="name"
                   type="text"
-                  placeholder="Enter your name"
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="John"
+                  className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  required
                 />
               </div>
-
-              <div>
-                <label className="block mb-1 font-medium">Last Name</label>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-medium text-gray-700 ml-1">Last Name</label>
                 <input
+                  name="lastName"
                   type="text"
-                  placeholder="Enter your last name"
-                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  placeholder="Doe"
+                  className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  required
                 />
               </div>
-            </>
+            </div>
           )}
 
-          <div>
-            <label className="block mb-1 font-medium">Email</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700 ml-1">Email Address</label>
             <input
+              name="email"
               type="email"
-              placeholder="Enter your email"
-              className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="example@mail.com"
+              className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              required
             />
           </div>
 
-          <div>
-            <label className="block mb-1 font-medium">Password</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700 ml-1">Password</label>
             <input
+              name="password"
               type="password"
-              placeholder="Enter your password"
-              className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-black text-white p-3 rounded-lg hover:bg-gray-800 transition"
+            className="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 mt-2"
           >
             {isLogin ? "Login" : "Register"}
           </button>
-
         </form>
 
-        <p className="text-center text-sm mt-6">
+        <p className="text-center text-sm mt-8 text-gray-600">
           {isLogin ? "Don't have an account?" : "Already have an account?"}
           <span
-            className="text-black font-semibold ml-2 cursor-pointer"
+            className="text-indigo-600 font-bold ml-2 cursor-pointer hover:underline"
             onClick={() => setIsLogin(!isLogin)}
           >
             {isLogin ? "Sign up" : "Login"}
           </span>
         </p>
-
       </div>
     </div>
   );

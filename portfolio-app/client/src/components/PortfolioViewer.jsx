@@ -1,37 +1,68 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext"; 
 import MinimalTemplate from "../templates/MinimalTemplate";
 import GridTemplate from "../templates/GridTemplate";
 import DarkTemplate from "../templates/DarkTemplate";
 
 function PortfolioViewer() {
   const { id } = useParams();
+  const location = useLocation();
+  const { isAuth, loading: authLoading } = useAuth(); 
+  
   const [portfolio, setPortfolio] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("myPortfolios")) || [];
-    const found = saved.find((p) => String(p.id) === String(id));
-    setPortfolio(found);
+    const fetchPortfolio = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/portfolios/${id}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          setPortfolio(data);
+        }
+      } catch (error) {
+        console.error("Error fetching portfolio:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchPortfolio();
   }, [id]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuth) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
 
   if (!portfolio) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <p className="text-gray-500 italic">Завантаження портфоліо...</p>
+      <div className="h-screen flex items-center justify-center italic text-gray-500">
+        Portfolio not found
       </div>
     );
   }
 
   const templateType = portfolio.template?.toLowerCase();
+  const props = { initialData: portfolio, id, readOnly: true };
 
-  if (templateType === "grid") {
-    return <GridTemplate initialData={portfolio.data} id={id} readOnly={true} />;
+  switch (templateType) {
+    case "grid":
+      return <GridTemplate {...props} />;
+    case "dark":
+      return <DarkTemplate {...props} />;
+    default:
+      return <MinimalTemplate {...props} />;
   }
-  if (templateType === "dark") {
-    return <DarkTemplate initialData={portfolio.data} id={id} readOnly={true} />;
-  }
-
-  return <MinimalTemplate initialData={portfolio.data} id={id} readOnly={true} />;
 }
 
 export default PortfolioViewer;
