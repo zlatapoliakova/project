@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Loader2 } from "lucide-react";
 
 function Auth({ mode }) {
   const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(mode === "login");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -16,14 +19,35 @@ function Auth({ mode }) {
 
   useEffect(() => {
     setIsLogin(mode === "login");
+    setErrors({});
   }, [mode]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) {
+      setErrors(prev => ({ ...prev, [e.target.name]: null }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!isLogin && !formData.name.trim()) newErrors.name = "First name is required";
+    if (!isLogin && !formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) newErrors.email = "Please enter a valid email";
+    
+    if (formData.password.length < 5) newErrors.password = "Password must be at least 5 characters";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
     const url = isLogin
       ? "http://localhost:5000/api/auth/login"
       : "http://localhost:5000/api/auth/register";
@@ -42,106 +66,122 @@ function Auth({ mode }) {
       const data = await response.json();
 
       if (response.ok) {
-        const userId = data.user.id || data.user._id;
-
+        const userId = data.user._id || data.user.id;
         login(data.user, data.token);
-
         navigate(`/profile/${userId}`);
-        
       } else {
-        alert(data.message || "Помилка авторизації");
+        setErrors({ server: data.message || "Authentication failed" });
       }
     } catch (error) {
       console.error("Auth error:", error);
-      alert("Сервер не відповідає");
+      setErrors({ server: "Server is not responding. Please try again later." });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="bg-white p-10 rounded-2xl shadow-lg w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
+      <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 w-full max-w-md border border-gray-100 animate-in fade-in zoom-in duration-300">
         <h1
-          className="text-3xl font-bold text-center mb-6 text-indigo-600 cursor-pointer"
+          className="text-3xl font-black text-center mb-2 text-indigo-600 cursor-pointer tracking-tighter"
           onClick={() => navigate("/")}
         >
-          Portify
+          Portify<span className="text-gray-900">.</span>
         </h1>
 
-        <h2 className="text-xl font-semibold text-center mb-6">
-          {isLogin ? "Welcome Back" : "Create Account"}
+        <h2 className="text-lg font-bold text-center mb-8 text-gray-500 uppercase tracking-widest text-[10px]">
+          {isLogin ? "Welcome Back" : "Start your journey"}
         </h2>
 
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        {errors.server && (
+          <div className="mb-6 p-3 bg-red-50 text-red-600 text-xs font-bold rounded-2xl border border-red-100 text-center">
+            {errors.server}
+          </div>
+        )}
+
+        <form className="space-y-5" onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700 ml-1">First Name</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">First Name</label>
                 <input
                   name="name"
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="John"
-                  className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  required
+                  className={`w-full border px-4 py-3 rounded-2xl outline-none text-sm transition-all ${errors.name ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/5'}`}
                 />
+                {errors.name && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.name}</p>}
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700 ml-1">Last Name</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Last Name</label>
                 <input
                   name="lastName"
                   type="text"
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Doe"
-                  className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-                  required
+                  className={`w-full border px-4 py-3 rounded-2xl outline-none text-sm transition-all ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/5'}`}
                 />
+                {errors.lastName && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.lastName}</p>}
               </div>
             </div>
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 ml-1">Email Address</label>
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Email Address</label>
             <input
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="example@mail.com"
-              className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-              required
+              className={`w-full border px-4 py-3 rounded-2xl outline-none text-sm transition-all ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/5'}`}
             />
+            {errors.email && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.email}</p>}
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 ml-1">Password</label>
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Password</label>
             <input
               name="password"
               type="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="••••••••"
-              className="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-              required
+              className={`w-full border px-4 py-3 rounded-2xl outline-none text-sm transition-all ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-4 focus:ring-indigo-500/5'}`}
             />
+            {errors.password && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.password}</p>}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white p-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg active:scale-95 mt-2"
+            disabled={loading}
+            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95 mt-4 flex items-center justify-center gap-2 ${loading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
           >
-            {isLogin ? "Login" : "Register"}
+            {loading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Processing...
+              </>
+            ) : (
+              isLogin ? "Login" : "Create Account"
+            )}
           </button>
         </form>
 
-        <p className="text-center text-sm mt-8 text-gray-600">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}
+        <p className="text-center text-[11px] font-bold mt-10 text-gray-400 uppercase tracking-widest">
+          {isLogin ? "New to Portify?" : "Already a member?"}
           <span
-            className="text-indigo-600 font-bold ml-2 cursor-pointer hover:underline"
-            onClick={() => setIsLogin(!isLogin)}
+            className="text-indigo-600 ml-2 cursor-pointer hover:underline"
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setErrors({});
+            }}
           >
-            {isLogin ? "Sign up" : "Login"}
+            {isLogin ? "Join now" : "Login here"}
           </span>
         </p>
       </div>

@@ -1,13 +1,21 @@
-import { useState } from "react";
-import { X, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Upload, Link as LinkIcon, Type, AlignLeft, Tag } from "lucide-react";
 
 export default function EditProjectModal({ project, onClose, onSave }) {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const getFullImg = (path) => {
+    if (!path) return "";
+    return (path.startsWith('http') || path.startsWith('data:')) 
+      ? path 
+      : `http://localhost:5000${path}`;
+  };
   
   const [form, setForm] = useState({
     title: project?.title || "",
     description: project?.description || "",
-    image: project?.image || "",
+    imagePreview: getFullImg(project?.image),
     link: project?.link || "",
     category: project?.category || "",
     file: null, 
@@ -16,47 +24,72 @@ export default function EditProjectModal({ project, onClose, onSave }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, image: "File is too large (max 5MB)" }));
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm({ ...form, image: reader.result, file: file });
+      setForm({ ...form, imagePreview: reader.result, file: file });
+      setErrors(prev => ({ ...prev, image: null }));
     };
     reader.readAsDataURL(file);
   };
 
+  const validate = () => {
+    const newErrors = {};
+    if (!form.title.trim()) newErrors.title = "Title is required";
+    if (form.link && !/^https?:\/\/.+/.test(form.link)) {
+      newErrors.link = "Invalid URL (must start with http:// or https://)";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validate()) return;
+
     setLoading(true);
+    const projectId = project._id || project.id;
+
     try {
       const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("description", form.description);
-      formData.append("link", form.link);
-      formData.append("category", form.category);
+      formData.append("title", form.title.trim());
+      formData.append("description", form.description.trim());
+      formData.append("link", form.link.trim());
+      formData.append("category", form.category.trim() || "General");
       
       if (form.file) {
         formData.append("image", form.file);
       }
 
-      const response = await fetch(`http://localhost:5000/api/projects/${project._id}`, {
+      const response = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
         method: "PUT",
         body: formData, 
       });
 
+      const updatedData = await response.json();
+
       if (response.ok) {
-        const updatedProject = await response.json();
-        onSave(updatedProject); 
+        onSave(updatedData); 
         onClose();
       } else {
-        alert("Помилка при оновленні проєкту");
+        setErrors({ global: updatedData.message || "Failed to update project" });
       }
     } catch (error) {
       console.error("Update error:", error);
-      alert("Не вдалося підключитися до сервера");
+      setErrors({ global: "Server connection failed" });
     } finally {
       setLoading(false);
     }
@@ -65,35 +98,49 @@ export default function EditProjectModal({ project, onClose, onSave }) {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm p-4"
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-md p-4 animate-in fade-in duration-300"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-xl"
+        className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative max-h-[95vh] overflow-y-auto"
       >
-        <div className="flex justify-between mb-6">
-          <h2 className="text-xl font-bold">Edit Project</h2>
-          <button onClick={onClose} className="hover:bg-gray-100 p-1 rounded-full transition">
-            <X />
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 tracking-tight">Edit Project</h2>
+            <p className="text-gray-500 text-sm">Update your work details</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
+            <X size={24} />
           </button>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex flex-col items-center border-2 border-dashed p-4 rounded-lg bg-gray-50">
-            {form.image ? (
-              <img
-                src={form.image}
-                alt="preview"
-                className="w-full h-40 object-cover rounded mb-3 shadow-sm"
-              />
+        {errors.global && (
+          <div className="mb-6 p-3 bg-red-50 text-red-600 text-xs font-bold rounded-xl border border-red-100">
+            {errors.global}
+          </div>
+        )}
+
+        <div className="space-y-6">
+          <div className={`group relative flex flex-col items-center p-2 border-2 border-dashed rounded-3xl transition-all ${errors.image ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-gray-50 hover:border-indigo-300'}`}>
+            {form.imagePreview ? (
+              <div className="relative w-full h-44">
+                <img
+                  src={form.imagePreview}
+                  alt="preview"
+                  className="w-full h-full object-cover rounded-2xl shadow-sm"
+                />
+                <div className="absolute inset-0 bg-black/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                   <p className="text-white text-xs font-bold">Replace Image</p>
+                </div>
+              </div>
             ) : (
-              <div className="h-40 flex items-center justify-center text-gray-400">
-                <Upload size={30} />
+              <div className="h-44 flex flex-col items-center justify-center text-gray-400">
+                <Upload size={32} className="mb-2 opacity-20" />
+                <p className="text-[10px] font-bold uppercase tracking-widest">No Cover Image</p>
               </div>
             )}
 
-            <label className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded cursor-pointer text-sm font-medium transition">
-              Change Image
+            <label className="absolute inset-0 cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
@@ -102,48 +149,71 @@ export default function EditProjectModal({ project, onClose, onSave }) {
               />
             </label>
           </div>
+          {errors.image && <p className="text-red-500 text-[10px] font-bold ml-2 -mt-4">{errors.image}</p>}
 
-          <div className="space-y-3">
-            <input
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Project title"
-            />
+          <div className="space-y-4">
+            <div>
+              <div className="relative">
+                <Type size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.title ? 'text-red-400' : 'text-gray-400'}`} />
+                <input
+                  name="title"
+                  value={form.title}
+                  onChange={handleChange}
+                  className={`w-full border px-11 py-3.5 rounded-2xl outline-none text-sm font-medium transition-all ${errors.title ? 'border-red-200 bg-red-50' : 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20'}`}
+                  placeholder="Project title *"
+                />
+              </div>
+              {errors.title && <p className="text-red-500 text-[10px] font-bold ml-4 mt-1">{errors.title}</p>}
+            </div>
 
-            <input
-              name="link"
-              value={form.link}
-              onChange={handleChange}
-              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Project link"
-            />
+            <div>
+              <div className="relative">
+                <LinkIcon size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${errors.link ? 'text-red-400' : 'text-gray-400'}`} />
+                <input
+                  name="link"
+                  value={form.link}
+                  onChange={handleChange}
+                  className={`w-full border px-11 py-3.5 rounded-2xl outline-none text-sm font-medium transition-all ${errors.link ? 'border-red-200 bg-red-50' : 'border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20'}`}
+                  placeholder="Project link (URL)"
+                />
+              </div>
+              {errors.link && <p className="text-red-500 text-[10px] font-bold ml-4 mt-1">{errors.link}</p>}
+            </div>
 
-            <input
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Category"
-            />
+            <div className="relative">
+              <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full border border-gray-100 bg-gray-50 px-11 py-3.5 rounded-2xl outline-none text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                placeholder="Category"
+              />
+            </div>
 
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full border p-2.5 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-              placeholder="Description"
-            />
+            <div className="relative">
+              <AlignLeft size={16} className="absolute left-4 top-4 text-gray-400" />
+              <textarea
+                name="description"
+                value={form.description}
+                onChange={handleChange}
+                rows={3}
+                className="w-full border border-gray-100 bg-gray-50 px-11 py-3.5 rounded-2xl outline-none text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                placeholder="Brief description..."
+              />
+            </div>
           </div>
 
           <button
             onClick={handleSave}
             disabled={loading}
-            className={`w-full ${loading ? 'bg-gray-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white py-3 rounded-xl font-bold transition-all shadow-md`}
+            className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-[0.98] ${
+              loading 
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100"
+            }`}
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? "Updating..." : "Save Changes"}
           </button>
         </div>
       </div>

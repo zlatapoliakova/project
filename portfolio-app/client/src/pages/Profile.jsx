@@ -34,6 +34,8 @@ function Profile() {
   const [portfolios, setPortfolios] = useState([]);
   const [editingProject, setEditingProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pendingAvatar, setPendingAvatar] = useState(null);
+  const [pendingBanner, setPendingBanner] = useState(null);
 
   const [profile, setProfile] = useState({
     userName: "",
@@ -48,6 +50,7 @@ function Profile() {
     linkedin: "",
     behance: "",
     available: true,
+    bannerBlur: 0,
     experiences: [],
     education: []
   });
@@ -74,6 +77,7 @@ function Profile() {
 
         if (userRes.ok) {
           setProfile(userData);
+          setBannerBlur(userData.bannerBlur || 0);
           
           const fullAvatar = userData.avatar 
             ? (userData.avatar.startsWith('http') ? userData.avatar : `http://localhost:5000${userData.avatar}`)
@@ -113,57 +117,82 @@ function Profile() {
 
   const handleSaveProfile = async () => {
     try {
+      let updatedProfile = { ...profile };
+
+      if (pendingBanner) {
+        const bannerData = new FormData();
+        bannerData.append('banner', pendingBanner);
+        const res = await fetch(`http://localhost:5000/api/auth/upload-banner/${id}`, {
+          method: 'POST',
+          body: bannerData,
+        });
+        const data = await res.json();
+        updatedProfile.banner = data.banner; 
+      }
+
+      if (pendingAvatar) {
+        const avatarData = new FormData();
+        avatarData.append('avatar', pendingAvatar);
+        const res = await fetch(`http://localhost:5000/api/auth/upload-avatar/${id}`, {
+          method: 'POST',
+          body: avatarData,
+        });
+        const data = await res.json();
+        updatedProfile.avatar = data.avatar;
+      }
+
       const response = await fetch(`http://localhost:5000/api/auth/update/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profile),
+        body: JSON.stringify(updatedProfile),
       });
 
       if (response.ok) {
+        setProfile(updatedProfile);
         setIsEditing(false);
-        alert("Профіль оновлено!");
+        setPendingBanner(null);
+        setPendingAvatar(null);
+        alert("Профіль успішно збережено!");
       }
     } catch (error) {
+      console.error(error);
       alert("Помилка збереження");
     }
   };
 
-  const handleAvatarChange = async (e) => {
-    if (!isOwner) return;
+  const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append('avatar', file);
-    try {
-      const response = await fetch(`http://localhost:5000/api/auth/upload-avatar/${id}`, {
-        method: 'POST',
-        body: formData,
-      });
-      if (response.ok) window.location.reload();
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-    }
+    
+    setPendingAvatar(file);
+    const previewUrl = URL.createObjectURL(file);
+    setAvatar(previewUrl);
   };
 
-  const handleBannerChange = async (e) => {
-    if (!isOwner) return;
+  const handleBannerChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append('banner', file);
+    
+    setPendingBanner(file);
+    const previewUrl = URL.createObjectURL(file);
+    setBanner(previewUrl);
+  };
+
+  const handleBlurChange = (value) => {
+    const blurValue = parseFloat(value);
+    setBannerBlur(blurValue);
+    setProfile(prev => ({ ...prev, bannerBlur: blurValue }));
+  };
+
+  const saveBlurToDB = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/auth/upload-banner/${id}`, {
-        method: 'POST',
-        body: formData,
+      await fetch(`http://localhost:5000/api/auth/update/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bannerBlur: bannerBlur }),
       });
-      if (response.ok) {
-        const data = await response.json();
-        const fullBanner = data.banner.startsWith('http') ? data.banner : `http://localhost:5000${data.banner}`;
-        setBanner(fullBanner);
-        alert("Банер оновлено!");
-      }
     } catch (error) {
-      console.error('Banner upload error:', error);
+      console.error("Помилка збереження блюру:", error);
     }
   };
 
@@ -203,9 +232,10 @@ function Profile() {
       <div className="max-w-7xl mx-auto p-8">
         <ProfileBanner 
           banner={banner}
+          onBlurSave={saveBlurToDB}
           bannerBlur={bannerBlur}
           onBannerChange={handleBannerChange}
-          onBlurChange={setBannerBlur}
+          onBlurChange={handleBlurChange}
           name={profile.name || profile.userName}
           readOnly={!isOwner} 
         />
@@ -284,11 +314,17 @@ function Profile() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-gray-400 ml-1">First Name</label>
-                      <input name="name" value={profile.name} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
+                      <input name="name" 
+                            value={profile.name} 
+                            onChange={handleChange}
+                            className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Last Name</label>
-                      <input name="surname" value={profile.surname} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
+                      <input name="surname" 
+                            value={profile.surname || ""} 
+                            onChange={handleChange}
+                            className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                     </div>
                   </div>
                   
@@ -297,14 +333,25 @@ function Profile() {
                     <input name="profession" value={profile.profession} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Location</label>
+                      <input name="location" value={profile.location || ""} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Phone</label>
+                      <input name="phone" value={profile.phone || ""} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
+                    </div>
+                  </div>
+
                   {/* ДОСВІД (EXPERIENCE) РЕДАГУВАННЯ */}
                   <div className="border-t border-gray-100 pt-4 space-y-4">
                     <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-2"><Briefcase size={14}/> Experience</h4>
                     <div className="space-y-2">
                       {profile.experiences?.map((exp, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-[10px]">
+                        <div key={`exp-${idx}`} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-[10px]">
                           <span><b>{exp.title}</b> ({exp.year})</span>
-                          <button type="button" onClick={() => setProfile({...profile, experiences: profile.experiences.filter((_, i) => i !== idx)})} className="text-red-500"><X size={14}/></button>
+                          <button type="button" onClick={() => setProfile(prev => ({...prev, experiences: prev.experiences.filter((_, i) => i !== idx)}))} className="text-red-500"><X size={14}/></button>
                         </div>
                       ))}
                     </div>
@@ -320,9 +367,9 @@ function Profile() {
                     <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-2"><GraduationCap size={16}/> Education</h4>
                     <div className="space-y-2">
                       {profile.education?.map((edu, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-[10px]">
+                        <div key={`edu-${idx}`} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-[10px]">
                           <span><b>{edu.school}</b> ({edu.year})</span>
-                          <button type="button" onClick={() => setProfile({...profile, education: profile.education.filter((_, i) => i !== idx)})} className="text-red-500"><X size={14}/></button>
+                          <button type="button" onClick={() => setProfile(prev => ({...prev, education: prev.education.filter((_, i) => i !== idx)}))} className="text-red-500"><X size={14}/></button>
                         </div>
                       ))}
                     </div>
@@ -342,6 +389,20 @@ function Profile() {
                     <input name="behance" placeholder="Behance URL" value={profile.behance} onChange={handleChange} className="w-full border rounded-xl px-4 py-2 text-sm outline-none" />
                   </div>
 
+                  <div className="flex items-center gap-3 px-1 pt-2">
+                    <input 
+                      type="checkbox" 
+                      name="available" 
+                      id="available"
+                      checked={profile.available} 
+                      onChange={handleChange} 
+                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <label htmlFor="available" className="text-sm font-bold text-gray-700 cursor-pointer">
+                      Available for projects
+                    </label>
+                  </div>
+
                   <div className="flex gap-3 pt-4">
                     <button onClick={handleSaveProfile} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition shadow-lg"><Save size={18} /> Save</button>
                     <button onClick={() => setIsEditing(false)} className="px-5 bg-gray-100 text-gray-500 py-3 rounded-xl hover:bg-gray-200 transition"><X size={18} /></button>
@@ -355,7 +416,7 @@ function Profile() {
           <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">Portfolio & Projects</h3>
-              {isOwner && <AddProjectButton onSave={(newProj) => setPortfolios(prev => [newProj, ...prev])} />}
+              {isOwner && <AddProjectButton userId={id} onSave={(newProj) => setPortfolios(prev => [newProj, ...prev])} />}
             </div>
 
             <div className="border-b border-gray-100 mb-8 flex gap-8">

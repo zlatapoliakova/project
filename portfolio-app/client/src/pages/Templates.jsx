@@ -1,12 +1,16 @@
+import React from 'react'; // Додано React import
 import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
 import Header from "../components/header/Header";
 import Footer from "../components/Footer";
 import TemplateCard from "../components/cards/TemplateCard";
 
+import { templates } from "../data/templatesData";
+
 function Templates() {
   const navigate = useNavigate();
-  const { isAuth, user, loading } = useAuth();
+  const { user, loading } = useAuth(); // isAuth не використовується, прибрано
 
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center font-bold">Loading...</div>;
 
@@ -22,8 +26,8 @@ function Templates() {
       owner: userId,
       template: template.id,
       data: {
-        name: user.name || user.userName.split(' ')[0],
-        surname: user.surname || user.userName.split(' ')[1] || "",
+        name: user.name || user.userName?.split(' ')[0] || "Name", // Додано захист від undefined userName
+        surname: user.surname || user.userName?.split(' ')[1] || "Surname", // Додано захист від undefined userName
         avatar: user.avatar,
         profession: user.profession || "",
         bio: user.bio || "",
@@ -54,19 +58,13 @@ function Templates() {
     }
   };
 
-  const templates = [
-    { id: "minimal", title: "Minimal Template", image: "https://picsum.photos/600/400?1" },
-    { id: "grid", title: "Grid Template", image: "https://picsum.photos/600/400?2" },
-    { id: "dark", title: "Dark Template", image: "https://picsum.photos/600/400?3" },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
       <div className="max-w-7xl mx-auto px-8 py-16 flex-1">
         <h1 className="text-4xl font-bold mb-3 text-gray-900 tracking-tight">Templates</h1>
-        <p className="text-gray-500 mb-12">
+        <p className="text-gray-500 mb-12 max-w-2xl">
           Choose a template to quickly start your professional portfolio page with your profile data.
         </p>
 

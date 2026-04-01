@@ -1,62 +1,79 @@
-import { Trash2, ExternalLink } from "lucide-react";
+import { Trash2, ExternalLink, Image as ImageIcon } from "lucide-react";
 
 export default function ProjectCard({ project, onDelete, onClick }) {
-  const { title, image, category, description, link, _id } = project;
+  const { title, image, category, description, link } = project;
+  
+  const projectId = project._id || project.id;
+
+  const imageUrl = image
+    ? (image.startsWith('http') || image.startsWith('data:')
+        ? image
+        : `http://localhost:5000${image}`)
+    : null;
 
   return (
     <div
       onClick={onClick}
-      className="group bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition cursor-pointer"
+      className="group bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full"
     >
-      <div className="relative h-40 bg-gray-100 overflow-hidden">
-        {image ? (
+      <div className="relative h-48 bg-gray-50 overflow-hidden">
+        {imageUrl ? (
           <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover group-hover:scale-105 transition"
+            src={imageUrl}
+            alt={title || "Project preview"}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            No Image
+          <div className="flex flex-col items-center justify-center h-full text-gray-300 bg-gray-50 transition-colors group-hover:bg-indigo-50">
+            <ImageIcon size={40} className="opacity-20 mb-2 text-indigo-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">No Preview</span>
           </div>
         )}
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(_id); 
-          }}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition hover:bg-red-50"
-        >
-          <Trash2 size={16} className="text-red-500" />
-        </button>
+        {onDelete && (
+          <button
+            type="button"
+            title="Delete project"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (projectId) onDelete(projectId);
+            }}
+            className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-gray-400 z-10"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
 
-      <div className="p-4">
-        <h4 className="font-bold text-gray-800 truncate">
+      <div className="p-6 flex-1 flex flex-col">
+        <div className="mb-3">
+          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
+            {category || "General"}
+          </span>
+        </div>
+
+        <h4 className="font-bold text-gray-900 text-lg leading-tight mb-2 truncate">
           {title || "Untitled Project"}
         </h4>
 
-        <p className="text-xs text-indigo-600 uppercase mb-2 font-semibold">
-          {category || "General"}
-        </p>
-
         {description && (
-          <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+          <p className="text-sm text-gray-500 line-clamp-3 mb-4 flex-1">
             {description}
           </p>
         )}
 
         {link && (
-          <a
-            href={link}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="text-indigo-600 text-sm font-medium inline-flex items-center gap-1 hover:underline"
-          >
-            Visit <ExternalLink size={14} />
-          </a>
+          <div className="mt-auto pt-4 border-t border-gray-50">
+            <a
+              href={link}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-indigo-600 text-xs font-bold inline-flex items-center gap-1.5 hover:text-indigo-700 transition-colors"
+            >
+              View Live Project <ExternalLink size={12} />
+            </a>
+          </div>
         )}
       </div>
     </div>

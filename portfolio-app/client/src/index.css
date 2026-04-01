@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+.template-card-container {
+    position: relative;
+    height: 18rem;
+    /* h-72 */
+    overflow: hidden;
+}
+
+.template-card-img {
+    width: 100%;
+    height: auto;
+    transition: transform 4s ease-in-out !important;
+    transform: translateY(0);
+    will-change: transform;
+}
+
+/* При наведенні на групу, картинка зсувається вгору на свою повну довжину мінус висота контейнера */
+.group:hover .template-card-img {
+    transform: translateY(calc(-100% + 18rem));
+}

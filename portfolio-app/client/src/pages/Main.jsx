@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
+import { templates } from "../data/templatesData";
+
 import { useAuth } from "../context/AuthContext";
 
 import Header from "../components/header/Header"; 
@@ -9,12 +11,6 @@ import TemplateCard from "../components/cards/TemplateCard";
 function Main() {
   const navigate = useNavigate();
   const { isAuth } = useAuth();
-
-  const templates = [
-    { id: "minimal", title: "Minimal Template", image: "https://picsum.photos/600/400?1" },
-    { id: "grid", title: "Grid Template", image: "https://picsum.photos/600/400?2" },
-    { id: "dark", title: "Dark Template", image: "https://picsum.photos/600/400?3" },
-  ];
 
   const handleSelectTemplate = (template) => {
     if (!isAuth) {
@@ -50,11 +46,14 @@ function Main() {
           <div className="flex justify-center">
             <div className="relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl blur opacity-20"></div>
-              <img 
-                src="https://picsum.photos/800/600?design" 
-                alt="Preview" 
-                className="relative rounded-2xl shadow-2xl w-full max-w-[500px] object-cover" 
-              />
+                <video 
+                  src="/video/portify_animation.mp4" 
+                  autoPlay 
+                  loop 
+                  muted 
+                  playsInline
+                  className="relative rounded-2xl shadow-2xl w-full max-w-[500px] object-cover" 
+                />
             </div>
           </div>
         </div>

@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
   available: { type: Boolean, default: true },
   avatar: { type: String, default: "" },
   banner: { type: String, default: "" },
+  bannerBlur: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 
