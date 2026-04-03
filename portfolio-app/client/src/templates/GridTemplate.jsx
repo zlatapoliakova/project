@@ -4,12 +4,11 @@ import {
   ArrowLeft, Edit3, Camera, Trash2, MapPin, 
   Upload, Share2, Check, GraduationCap, Briefcase 
 } from "lucide-react";
-
 import { useAuth } from "../context/AuthContext";
 
 export default function GridTemplate({ initialData, id: propId, readOnly = false }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, t } = useAuth();
   const { id: urlId } = useParams();
   const id = propId || urlId;
 
@@ -20,7 +19,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
     name: "Name",
     surname: "Surname",
     profession: "Visual Designer",
-    about: "Creative professional focused on modern solutions.",
+    about: "",
     location: "Ukraine",
     avatar: "",
     experiences: [],
@@ -41,7 +40,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
         name: initialData?.data?.name || user?.name || user?.userName?.split(' ')[0] || "Name",
         surname: initialData?.data?.surname || user?.surname || user?.userName?.split(' ')[1] || "Surname",
         profession: initialData?.data?.profession || user?.profession || "Visual Designer",
-        about: initialData?.data?.about || user?.bio || "Creative professional.",
+        about: initialData?.data?.about || user?.bio || "",
         location: initialData?.data?.location || user?.location || "Ukraine",
         avatar: initialData?.data?.avatar || user?.avatar || "",
         experiences: (initialData?.data?.experiences && initialData.data.experiences.length > 0)
@@ -58,11 +57,11 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
   const handleShare = () => {
     const viewUrl = `${window.location.origin}/view-portfolio/${id}`;
     navigator.clipboard.writeText(viewUrl);
-    alert("Публічне посилання скопійовано!");
+    alert(t.gridTemplate.shareSuccess);
   };
 
   const handleAddProjectToDB = async () => {
-    if (!newProject.title.trim()) return alert("Введіть назву проєкту");
+    if (!newProject.title.trim()) return alert(t.gridTemplate.titleError);
     setLoading(true);
     const formData = new FormData();
     formData.append("owner", userId);
@@ -79,7 +78,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
         const saved = await res.json();
         setPortfolio(prev => ({ ...prev, projects: [...prev.projects, saved] }));
         setNewProject({ title: "", description: "", link: "", image: "", category: "", file: null });
-        alert("Проєкт додано!");
+        alert(t.gridTemplate.addSuccess);
       }
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
@@ -97,7 +96,10 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (response.ok) { setIsEditing(false); alert("Зміни збережено!"); }
+      if (response.ok) { 
+        setIsEditing(false); 
+        alert(t.gridTemplate.saveSuccess); 
+      }
     } catch (error) { console.error("Save error:", error); } finally { setLoading(false); }
   };
 
@@ -106,6 +108,8 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
     return path.startsWith('http') || path.startsWith('data:') ? path : `http://localhost:5000${path}`;
   };
 
+  if (!t) return null;
+
   return (
     <div className="min-h-screen bg-white font-sans selection:bg-indigo-100">
       {isOwner && !readOnly && (
@@ -113,9 +117,9 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
           <button onClick={() => navigate(`/profile/${userId}`)} className="bg-white shadow-xl p-3 rounded-full border hover:bg-gray-50 transition"><ArrowLeft size={20} /></button>
           <button onClick={handleShare} className="bg-white shadow-xl p-3 rounded-full border hover:bg-gray-50 transition text-indigo-600"><Share2 size={20} /></button>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="bg-black text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:scale-105 transition"><Edit3 size={18} /> Edit</button>
+            <button onClick={() => setIsEditing(true)} className="bg-black text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:scale-105 transition"><Edit3 size={18} /> {t.gridTemplate.edit}</button>
           ) : (
-            <button onClick={handleSave} disabled={loading} className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl hover:bg-green-700 font-bold transition"><Check size={18} /> Save Changes</button>
+            <button onClick={handleSave} disabled={loading} className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl hover:bg-green-700 font-bold transition"><Check size={18} /> {t.gridTemplate.saveChanges}</button>
           )}
         </div>
       )}
@@ -126,11 +130,23 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
             {isEditing ? (
               <div className="space-y-6 text-left text-black">
                 <div className="grid grid-cols-2 gap-4">
-                  <div><label className="text-[10px] font-black uppercase text-gray-400">First Name</label><input value={portfolio.name} onChange={e => setPortfolio({...portfolio, name: e.target.value})} className="text-2xl font-black w-full border-b outline-none uppercase" /></div>
-                  <div><label className="text-[10px] font-black uppercase text-gray-400">Last Name</label><input value={portfolio.surname} onChange={e => setPortfolio({...portfolio, surname: e.target.value})} className="text-2xl font-black w-full border-b outline-none uppercase" /></div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.labels.fName}</label>
+                    <input value={portfolio.name} onChange={e => setPortfolio({...portfolio, name: e.target.value})} className="text-2xl font-black w-full border-b outline-none uppercase" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.labels.lName}</label>
+                    <input value={portfolio.surname} onChange={e => setPortfolio({...portfolio, surname: e.target.value})} className="text-2xl font-black w-full border-b outline-none uppercase" />
+                  </div>
                 </div>
-                <div><label className="text-[10px] font-black uppercase text-gray-400">Profession</label><input value={portfolio.profession} onChange={e => setPortfolio({...portfolio, profession: e.target.value})} className="text-xl font-bold text-indigo-600 w-full border-b outline-none uppercase" /></div>
-                <textarea value={portfolio.about} onChange={e => setPortfolio({...portfolio, about: e.target.value})} rows="4" className="w-full text-lg text-gray-500 bg-white border p-4 rounded-xl outline-none" />
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.labels.prof}</label>
+                  <input value={portfolio.profession} onChange={e => setPortfolio({...portfolio, profession: e.target.value})} className="text-xl font-bold text-indigo-600 w-full border-b outline-none uppercase" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.labels.about}</label>
+                  <textarea value={portfolio.about} onChange={e => setPortfolio({...portfolio, about: e.target.value})} rows="4" className="w-full text-lg text-gray-500 bg-white border p-4 rounded-xl outline-none" placeholder={t.gridTemplate.aboutPlaceholder} />
+                </div>
               </div>
             ) : (
               <>
@@ -146,7 +162,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
            {portfolio.avatar ? <img src={getFullImg(portfolio.avatar)} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-1000" alt="Avatar" /> : <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300"><Upload size={48} /></div>}
            {isEditing && (
             <label className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer opacity-0 hover:opacity-100 transition">
-              <div className="bg-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl"><Camera size={20} /> Change Avatar</div>
+              <div className="bg-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-2xl"><Camera size={20} /> {t.gridTemplate.changeAvatar}</div>
               <input type="file" className="hidden" accept="image/*" onChange={e => {
                 const reader = new FileReader();
                 reader.onloadend = () => setPortfolio({...portfolio, avatar: reader.result});
@@ -160,7 +176,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
       <section className="bg-black text-white py-24 px-8">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-20">
           <div className="space-y-8">
-            <h3 className="text-indigo-400 font-black uppercase tracking-widest text-lg border-l-4 border-indigo-400 pl-4 flex items-center gap-2"><Briefcase size={20}/> Experience</h3>
+            <h3 className="text-indigo-400 font-black uppercase tracking-widest text-lg border-l-4 border-indigo-400 pl-4 flex items-center gap-2"><Briefcase size={20}/> {t.gridTemplate.experience}</h3>
             <div className="space-y-6">
               {portfolio.experiences.map((exp, idx) => (
                 <div key={idx} className="group relative border-b border-white/10 pb-4">
@@ -173,14 +189,14 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
             </div>
             {isEditing && (
               <div className="bg-white/5 p-6 rounded-2xl space-y-3">
-                <input placeholder="Position" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="w-full bg-transparent border-b border-white/20 p-2 outline-none" />
-                <button onClick={() => { if(!newExp.title) return; setPortfolio({...portfolio, experiences: [...portfolio.experiences, newExp]}); setNewExp({title:"", year:"", desc:""})}} className="w-full bg-indigo-500 py-2 rounded-lg font-bold">Add Experience</button>
+                <input placeholder={t.gridTemplate.labels.pos} value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="w-full bg-transparent border-b border-white/20 p-2 outline-none" />
+                <button onClick={() => { if(!newExp.title) return; setPortfolio({...portfolio, experiences: [...portfolio.experiences, newExp]}); setNewExp({title:"", year:"", desc:""})}} className="w-full bg-indigo-500 py-2 rounded-lg font-bold">{t.gridTemplate.addExp}</button>
               </div>
             )}
           </div>
 
           <div className="space-y-8">
-            <h3 className="text-indigo-400 font-black uppercase tracking-widest text-lg border-l-4 border-indigo-400 pl-4 flex items-center gap-2"><GraduationCap size={22}/> Education</h3>
+            <h3 className="text-indigo-400 font-black uppercase tracking-widest text-lg border-l-4 border-indigo-400 pl-4 flex items-center gap-2"><GraduationCap size={22}/> {t.gridTemplate.education}</h3>
             <div className="space-y-6">
               {portfolio.education.map((edu, idx) => (
                 <div key={idx} className="group relative border-b border-white/10 pb-4">
@@ -193,8 +209,8 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
             </div>
             {isEditing && (
               <div className="bg-white/5 p-6 rounded-2xl space-y-3">
-                <input placeholder="University" value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="w-full bg-transparent border-b border-white/20 p-2 outline-none" />
-                <button onClick={() => { if(!newEdu.school) return; setPortfolio({...portfolio, education: [...portfolio.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-500 py-2 rounded-lg font-bold">Add Education</button>
+                <input placeholder={t.gridTemplate.labels.uni} value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="w-full bg-transparent border-b border-white/20 p-2 outline-none" />
+                <button onClick={() => { if(!newEdu.school) return; setPortfolio({...portfolio, education: [...portfolio.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-500 py-2 rounded-lg font-bold">{t.gridTemplate.addEdu}</button>
               </div>
             )}
           </div>
@@ -202,7 +218,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
       </section>
 
       <section className="max-w-7xl mx-auto py-32 px-8">
-        <h2 className="text-7xl font-black uppercase mb-16 tracking-tighter text-black text-center">Selected Works</h2>
+        <h2 className="text-7xl font-black uppercase mb-16 tracking-tighter text-black text-center">{t.gridTemplate.selectedWorks}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-1 mb-20">
           {portfolio.projects.map((p, idx) => (
             <div key={idx} className="relative aspect-square group cursor-pointer overflow-hidden border border-gray-100">
@@ -210,7 +226,7 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
               <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all p-8 flex flex-col justify-end">
                 <p className="text-indigo-400 font-bold text-xs uppercase mb-2">{p.category}</p>
                 <h3 className="text-white text-2xl font-bold">{p.title}</h3>
-                {isEditing && <button onClick={(e) => { e.stopPropagation(); setPortfolio({...portfolio, projects: portfolio.projects.filter((_, i) => i !== idx)})}} className="mt-4 text-red-500 flex items-center gap-1 text-xs font-bold uppercase"><Trash2 size={14}/> Remove</button>}
+                {isEditing && <button onClick={(e) => { e.stopPropagation(); setPortfolio({...portfolio, projects: portfolio.projects.filter((_, i) => i !== idx)})}} className="mt-4 text-red-500 flex items-center gap-1 text-xs font-bold uppercase"><Trash2 size={14}/> {t.gridTemplate.remove}</button>}
               </div>
             </div>
           ))}
@@ -218,34 +234,49 @@ export default function GridTemplate({ initialData, id: propId, readOnly = false
 
         {isEditing && (
           <div className="p-10 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 mt-20 text-black">
-            <h3 className="text-2xl font-black mb-8 text-center uppercase tracking-tighter">Add New Project</h3>
+            <h3 className="text-2xl font-black mb-8 text-center uppercase tracking-tighter">{t.gridTemplate.addNewProject}</h3>
             <div className="grid md:grid-cols-2 gap-10 text-left">
               <div className="space-y-5">
-                <input placeholder="Title *" value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="w-full p-4 rounded-xl border outline-none bg-white" />
-                <input placeholder="Category" value={newProject.category} onChange={e => setNewProject({...newProject, category: e.target.value})} className="w-full p-4 rounded-xl border outline-none bg-white" />
-                <input placeholder="Link" value={newProject.link} onChange={e => setNewProject({...newProject, link: e.target.value})} className="w-full p-4 rounded-xl border outline-none bg-white" />
-                <textarea placeholder="Description" value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} className="w-full p-4 rounded-xl border h-24 outline-none resize-none bg-white" />
+                <div className="flex flex-col gap-1">
+                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.projectTitle}</label>
+                   <input value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="w-full p-4 rounded-xl border outline-none bg-white" />
+                </div>
+                <div className="flex flex-col gap-1">
+                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.projectCategory}</label>
+                   <input value={newProject.category} onChange={e => setNewProject({...newProject, category: e.target.value})} className="w-full p-4 rounded-xl border outline-none bg-white" />
+                </div>
+                <div className="flex flex-col gap-1">
+                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.projectLink}</label>
+                   <input value={newProject.link} onChange={e => setNewProject({...newProject, link: e.target.value})} className="w-full p-4 rounded-xl border outline-none bg-white" />
+                </div>
+                <div className="flex flex-col gap-1">
+                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.gridTemplate.projectDesc}</label>
+                   <textarea value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} className="w-full p-4 rounded-xl border h-24 outline-none resize-none bg-white" />
+                </div>
               </div>
-              <div className="flex flex-col items-center justify-center bg-white rounded-2xl border-2 border-dashed border-gray-100 p-6 min-h-[250px]">
-                {newProject.image ? <img src={newProject.image} className="h-40 w-full object-cover rounded-xl" /> : <Upload size={40} className="text-gray-200 mb-2" />}
-                <label className="cursor-pointer bg-black text-white px-6 py-2 rounded-full text-xs font-bold uppercase hover:bg-gray-800 transition mt-2">
-                  Upload Cover
-                  <input type="file" className="hidden" accept="image/*" onChange={e => {
-                    const file = e.target.files[0];
-                    if (file) setNewProject({...newProject, file, image: URL.createObjectURL(file)});
-                  }} />
-                </label>
+              <div className="flex flex-col">
+                <label className="text-[10px] font-black uppercase text-gray-400 ml-1 mb-1">{t.gridTemplate.uploadCover}</label>
+                <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-2xl border-2 border-dashed border-gray-100 p-6 min-h-[250px]">
+                  {newProject.image ? <img src={newProject.image} className="h-40 w-full object-cover rounded-xl" /> : <Upload size={40} className="text-gray-200 mb-2" />}
+                  <label className="cursor-pointer bg-black text-white px-6 py-2 rounded-full text-xs font-bold uppercase hover:bg-gray-800 transition mt-2">
+                    {t.gridTemplate.uploadCover}
+                    <input type="file" className="hidden" accept="image/*" onChange={e => {
+                      const file = e.target.files[0];
+                      if (file) setNewProject({...newProject, file, image: URL.createObjectURL(file)});
+                    }} />
+                  </label>
+                </div>
               </div>
             </div>
             <button onClick={handleAddProjectToDB} disabled={loading} className="mt-10 w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl transition disabled:bg-gray-400">
-              {loading ? "Creating..." : "Save Project & Add to Grid"}
+              {loading ? t.gridTemplate.creating : t.gridTemplate.saveProjectBtn}
             </button>
           </div>
         )}
       </section>
 
       <footer className="py-20 text-center bg-gray-50 border-t border-gray-100">
-        <p className="font-bold text-gray-400 uppercase tracking-widest text-[10px]">© {new Date().getFullYear()} {portfolio.name} {portfolio.surname}</p>
+        <p className="font-bold text-gray-400 uppercase tracking-widest text-[10px]">© {new Date().getFullYear()} {portfolio.name} {portfolio.surname}. {t.minimalTemplate.allRightsReserved}</p>
       </footer>
     </div>
   );

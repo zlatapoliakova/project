@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User as UserIcon, Briefcase, X as CloseIcon, ArrowRight } from "lucide-react";
+import { Search, X as CloseIcon, ArrowRight } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 function Searchbar() {
+  const { t } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -62,6 +64,8 @@ function Searchbar() {
     setIsOpen(false);
   };
 
+  if (!t) return null;
+
   return (
     <div className="flex-1 max-w-md mx-8 relative hidden lg:block" ref={searchRef}>
       <div className="relative group">
@@ -71,7 +75,7 @@ function Searchbar() {
         />
         <input
           type="text"
-          placeholder="Search designers or professions..."
+          placeholder={t.search.placeholder}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -96,7 +100,7 @@ function Searchbar() {
             {searching ? (
               <div className="p-6 text-center">
                 <div className="inline-block w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-2"></div>
-                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Searching...</p>
+                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{t.search.searching}</p>
               </div>
             ) : results.length > 0 ? (
               results.map((designer) => (
@@ -126,7 +130,7 @@ function Searchbar() {
                         : designer.userName}
                     </h4>
                     <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-tighter mt-0.5">
-                      {designer.profession || "Designer"}
+                      {designer.profession || t.search.defaultProfession}
                     </p>
                   </div>
 
@@ -137,8 +141,8 @@ function Searchbar() {
               ))
             ) : (
               <div className="p-8 text-center">
-                <p className="text-sm font-bold text-gray-400">No designers found</p>
-                <p className="text-[10px] text-gray-400 uppercase mt-1">Try another keyword</p>
+                <p className="text-sm font-bold text-gray-400">{t.search.noResults}</p>
+                <p className="text-[10px] text-gray-400 uppercase mt-1">{t.search.tryAgain}</p>
               </div>
             )}
           </div>

@@ -1,20 +1,17 @@
 export const templates = [
   { 
     id: "minimal", 
-    title: "Minimal Template", 
-    image: "/img/minimal-template.png", 
-    description: "Clean and elegant portfolio layout focusing on essential details." 
+    image: "/img/minimal-template.png",
+    title: "Minimal Template"
   },
   { 
     id: "grid", 
-    title: "Grid Template", 
-    image: "/img/grid-template.png", 
-    description: "Modern grid-based design, perfect for visual creators and designers." 
+    image: "/img/grid-template.png",
+    title: "Grid Template"
   },
   { 
     id: "dark", 
-    title: "Dark Template", 
-    image: "/img/dark-template.png", 
-    description: "Sleek and professional dark aesthetic for a high-end digital presence." 
+    image: "/img/dark-template.png",
+    title: "Dark Template"
   },
 ];

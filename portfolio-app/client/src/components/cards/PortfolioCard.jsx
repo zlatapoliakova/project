@@ -1,6 +1,8 @@
 import { Briefcase, Trash2, ExternalLink, Layout } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 function PortfolioCard({ portfolio, onClick, onDelete }) {
+  const { t } = useAuth();
   const rawAvatar = portfolio.data?.avatar;
   
   const userAvatar = rawAvatar 
@@ -11,6 +13,8 @@ function PortfolioCard({ portfolio, onClick, onDelete }) {
 
   const portfolioId = portfolio._id || portfolio.id;
 
+  if (!t) return null;
+
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col h-full">
       <div 
@@ -20,7 +24,7 @@ function PortfolioCard({ portfolio, onClick, onDelete }) {
         {userAvatar ? (
           <img 
             src={userAvatar} 
-            alt={portfolio.title || "Portfolio Preview"} 
+            alt={portfolio.title || t.portfolioCard.untitled} 
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
@@ -30,7 +34,7 @@ function PortfolioCard({ portfolio, onClick, onDelete }) {
         )}
 
         <div className="absolute inset-0 flex items-center justify-center font-bold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity bg-white/20 backdrop-blur-[2px] z-10">
-           Open Editor
+          {t.portfolioCard.openEditor}
         </div>
         
         <div className="absolute top-4 left-4 z-20">
@@ -44,16 +48,16 @@ function PortfolioCard({ portfolio, onClick, onDelete }) {
         <div className="flex justify-between items-start mb-4">
           <div className="max-w-[80%]">
             <h4 className="font-bold text-gray-900 text-lg leading-tight truncate">
-              {portfolio.title || "Untitled Portfolio"}
+              {portfolio.title || t.portfolioCard.untitled}
             </h4>
             <p className="text-xs text-gray-500 mt-1">
-              Template: <span className="capitalize">{portfolio.template || "Standard"}</span>
+              {t.portfolioCard.templateLabel} <span className="capitalize">{portfolio.template || "Standard"}</span>
             </p>
           </div>
           
           <button 
             type="button"
-            title="Delete portfolio"
+            title={t.portfolioCard.deleteTitle}
             onClick={(e) => {
               e.stopPropagation();
               if (onDelete && portfolioId) onDelete(portfolioId); 
@@ -70,7 +74,7 @@ function PortfolioCard({ portfolio, onClick, onDelete }) {
               <Briefcase size={14} />
             </div>
             <span className="text-xs font-bold truncate max-w-[120px]">
-              {portfolio.data?.profession || "Portfolio Page"}
+              {portfolio.data?.profession || t.portfolioCard.defaultType}
             </span>
           </div>
 
@@ -78,7 +82,7 @@ function PortfolioCard({ portfolio, onClick, onDelete }) {
             onClick={onClick}
             className="flex items-center gap-1 text-xs font-bold text-gray-900 hover:text-indigo-600 transition-colors"
           >
-            Edit Page <ExternalLink size={12} />
+            {t.portfolioCard.editBtn} <ExternalLink size={12} />
           </button>
         </div>
       </div>

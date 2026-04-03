@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Camera, Droplets, Check } from "lucide-react";
+import { useAuth } from "../context/AuthContext"; 
 
 function ProfileBanner({ 
   banner, 
@@ -10,6 +11,7 @@ function ProfileBanner({
   readOnly = false, 
   onBlurSave 
 }) {
+  const { t } = useAuth(); 
   const [showBlurSlider, setShowBlurSlider] = useState(false);
   const fileInputRef = React.useRef(null);
 
@@ -18,6 +20,8 @@ function ProfileBanner({
         ? banner 
         : `http://localhost:5000${banner}`)
     : null;
+
+  if (!t) return null;
 
   return (
     <div className="relative rounded-[2.5rem] shadow-xl mb-10 overflow-hidden h-64 bg-slate-900 group border-4 border-white">
@@ -41,13 +45,13 @@ function ProfileBanner({
         <div className="animate-in fade-in slide-in-from-left-4 duration-500">
           <h2 className="text-4xl font-black tracking-tight drop-shadow-md">
             {readOnly 
-              ? `${name || "Designer"}'s Portfolio` 
-              : (name ? `Welcome back, ${name}!` : "Welcome to Portify")}
+              ? `${name || t.search.defaultProfession}${t.profile.banner.portfolioOf}` 
+              : (name ? `${t.profile.banner.welcomeBack} ${name}!` : t.profile.banner.welcome)}
           </h2>
           <p className="text-lg opacity-80 mt-2 font-bold tracking-wide">
             {readOnly 
-              ? "Exploring creative horizons and professional works." 
-              : "Ready to build your professional presence today?"}
+              ? t.profile.banner.explore 
+              : t.profile.banner.ready}
           </p>
         </div>
 
@@ -57,13 +61,13 @@ function ProfileBanner({
               onClick={() => fileInputRef.current.click()} 
               className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-white/20 shadow-lg"
             >
-              <Camera size={16} /> Change Cover
+              <Camera size={16} /> {t.profile.banner.changeCover}
             </button>
             <button 
               onClick={() => setShowBlurSlider(true)} 
               className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border border-white/20 shadow-lg"
             >
-              <Droplets size={16} /> Focus Blur
+              <Droplets size={16} /> {t.profile.banner.focusBlur}
             </button>
           </div>
         )}
@@ -84,7 +88,9 @@ function ProfileBanner({
               <Droplets size={20} className="text-white" />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black uppercase tracking-tighter text-white/60">Surface Blur</span>
+              <span className="text-[10px] font-black uppercase tracking-tighter text-white/60">
+                {t.profile.banner.surfaceBlur}
+              </span>
               <input 
                 type="range" 
                 min="0" 

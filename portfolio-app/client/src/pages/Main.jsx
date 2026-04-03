@@ -1,16 +1,13 @@
 import { useNavigate } from "react-router-dom";
-
 import { templates } from "../data/templatesData";
-
 import { useAuth } from "../context/AuthContext";
-
 import Header from "../components/header/Header"; 
 import Footer from "../components/Footer";
 import TemplateCard from "../components/cards/TemplateCard";
 
 function Main() {
   const navigate = useNavigate();
-  const { isAuth } = useAuth();
+  const { isAuth, t } = useAuth();
 
   const handleSelectTemplate = (template) => {
     if (!isAuth) {
@@ -19,6 +16,8 @@ function Main() {
     }
     navigate("/portfolio-editor", { state: { templateId: template.id } });
   };
+
+  if (!t) return null;
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,18 +27,18 @@ function Main() {
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-5xl font-bold leading-tight mb-6 text-gray-900">
-              Create your professional
-              <span className="text-indigo-600 block"> design portfolio</span>
+              {t.main.heroTitle}
+              <span className="text-indigo-600 block"> {t.main.heroTitleAccent}</span>
             </h1>
             <p className="text-gray-600 mb-8 text-lg">
-              Build, customize and share your digital portfolio in minutes.
+              {t.main.heroSubtitle}
             </p>
             <div className="flex gap-4">
               <button 
                 onClick={() => navigate(isAuth ? "/templates" : "/register")}
                 className="px-8 py-4 bg-indigo-600 text-white rounded-xl text-lg font-bold hover:bg-indigo-700 transition-all shadow-lg"
               >
-                {isAuth ? "Go to Templates" : "Start Creating — It's Free"}
+                {isAuth ? t.main.goTemplates : t.main.startFree}
               </button>
             </div>
           </div>
@@ -62,8 +61,8 @@ function Main() {
       <section className="bg-white py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Choose your template</h2>
-            <p className="text-gray-500">Select a starting point for your personal portfolio</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t.main.templateTitle}</h2>
+            <p className="text-gray-500">{t.main.templateSubtitle}</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">

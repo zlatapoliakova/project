@@ -18,7 +18,7 @@ import ProfileBanner from "../components/ProfileBanner";
 
 function Profile() {
   const { id } = useParams(); 
-  const { user: currentUser } = useAuth(); 
+  const { user: currentUser, t } = useAuth(); 
   const navigate = useNavigate();
   const avatarInputRef = useRef(null);
 
@@ -56,9 +56,9 @@ function Profile() {
   });
 
   const tabs = [
-    { id: "all", label: "All" },
-    { id: "portfolio", label: "Portfolios" },
-    { id: "projects", label: "Projects" },
+    { id: "all", label: t?.profile?.tabs?.all || "All" },
+    { id: "portfolio", label: t?.profile?.tabs?.portfolios || "Portfolios" },
+    { id: "projects", label: t?.profile?.tabs?.projects || "Projects" },
   ];
 
   useEffect(() => {
@@ -152,11 +152,11 @@ function Profile() {
         setIsEditing(false);
         setPendingBanner(null);
         setPendingAvatar(null);
-        alert("Профіль успішно збережено!");
+        alert(t?.profile?.editForm?.success || "Profile successfully saved!");
       }
     } catch (error) {
       console.error(error);
-      alert("Помилка збереження");
+      alert(t?.profile?.editForm?.error || "Save failed");
     }
   };
 
@@ -192,7 +192,7 @@ function Profile() {
         body: JSON.stringify({ bannerBlur: bannerBlur }),
       });
     } catch (error) {
-      console.error("Помилка збереження блюру:", error);
+      console.error("Error saving blur:", error);
     }
   };
 
@@ -205,7 +205,8 @@ function Profile() {
   const handleDelete = async (item) => {
     if (!isOwner) return;
     const itemId = item._id || item.id;
-    if (!confirm(`Ви впевнені, що хочете видалити цей ${item.type === 'portfolio' ? 'шаблон' : 'проєкт'}?`)) return;
+    const confirmMsg = `${t?.common?.confirmDelete || "Are you sure you want to delete this"} ${item.type === 'portfolio' ? 'portfolio' : 'project'}?`;
+    if (!confirm(confirmMsg)) return;
     
     const endpoint = item.type === "portfolio" 
       ? `http://localhost:5000/api/portfolios/${itemId}`
@@ -216,14 +217,14 @@ function Profile() {
       if (response.ok) {
         setPortfolios(prev => prev.filter(p => (p._id || p.id) !== itemId));
       } else {
-        alert("Помилка видалення");
+        alert(t?.profile?.editForm?.error || "Error");
       }
     } catch (error) {
       console.error("Delete error:", error);
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-bold">Loading...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-bold">{t?.common?.loading || "Loading..."}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -241,7 +242,6 @@ function Profile() {
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* ЛІВА ЧАСТИНА - КАРТКА ПРОФІЛЮ */}
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden h-fit sticky top-24">
             <div className="p-8">
               <div className="flex flex-col items-center mb-8">
@@ -263,7 +263,7 @@ function Profile() {
                   </h3>
                   {profile.available && (
                     <span className="inline-flex items-center mt-3 px-4 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
-                      <span className="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5 animate-pulse"></span> Available Now
+                      <span className="w-2.5 h-2.5 bg-green-500 rounded-full mr-2.5 animate-pulse"></span> {t?.profile?.available || "Available Now"}
                     </span>
                   )}
                 </div>
@@ -272,14 +272,15 @@ function Profile() {
               {!isEditing ? (
                 <div className="space-y-6">
                   <div className="space-y-4 border-t border-gray-100 pt-6">
-                    <div className="flex items-center text-gray-700 gap-4"><Briefcase size={20} className="text-gray-400" /><span>{profile.profession || "Profession"}</span></div>
+                    <div className="flex items-center text-gray-700 gap-4"><Briefcase size={20} className="text-gray-400" /><span>{profile.profession || t?.profile?.profession || "Profession"}</span></div>
                     
                     <div className="flex items-center text-gray-700 gap-4">
                         <Clock size={20} className="text-gray-400" />
-                        <span>
+                        <span className="text-sm">
+                            <span className="font-bold mr-1">{t?.profile?.experience || "Experience"}:</span>
                             {profile.experiences?.length > 0 
                                 ? `${profile.experiences[profile.experiences.length - 1].title} (${profile.experiences[profile.experiences.length - 1].year})`
-                                : (profile.experience || "No experience")}
+                                : (profile.experience || t?.profile?.noExp || "No experience")}
                         </span>
                     </div>
 
@@ -287,6 +288,7 @@ function Profile() {
                       <div className="flex items-start text-gray-700 gap-4">
                         <GraduationCap size={20} className="text-gray-400 mt-0.5" />
                         <div className="flex flex-col">
+                          <span className="font-bold text-sm mb-1">{t?.profile?.education || "Education"}:</span>
                           {profile.education.map((edu, idx) => (
                             <span key={idx} className="text-sm font-medium">{edu.school} <span className="text-gray-400 font-normal">({edu.year})</span></span>
                           ))}
@@ -294,8 +296,8 @@ function Profile() {
                       </div>
                     )}
 
-                    <div className="flex items-center text-gray-700 gap-4"><MapPin size={20} className="text-gray-400" /><span>{profile.location || "Location"}</span></div>
-                    <div className="flex items-center text-gray-700 gap-4"><Phone size={20} className="text-gray-400" /><span>{profile.phone || "No phone"}</span></div>
+                    <div className="flex items-center text-gray-700 gap-4"><MapPin size={20} className="text-gray-400" /><span>{profile.location || t?.profile?.location || "Location"}</span></div>
+                    <div className="flex items-center text-gray-700 gap-4"><Phone size={20} className="text-gray-400" /><span>{profile.phone || t?.profile?.noPhone || "No phone"}</span></div>
                     
                     <div className="pt-4 flex flex-wrap gap-3">
                       {profile.website && <a href={profile.website} target="_blank" rel="noreferrer" className="p-2 bg-gray-50 rounded-lg hover:text-indigo-600 transition"><Globe size={20} /></a>}
@@ -305,22 +307,23 @@ function Profile() {
                     </div>
                   </div>
                   {isOwner && (
-                    <button onClick={() => setIsEditing(true)} className="w-full mt-4 bg-white text-gray-700 border border-gray-200 py-3.5 rounded-xl font-bold hover:bg-gray-50 transition">Edit Profile Info</button>
+                    <button onClick={() => setIsEditing(true)} className="w-full mt-4 bg-white text-gray-700 border border-gray-200 py-3.5 rounded-xl font-bold hover:bg-gray-50 transition">
+                      {t?.profile?.editBtn || "Edit Profile Info"}
+                    </button>
                   )}
                 </div>
               ) : (
-                /* РЕЖИМ РЕДАГУВАННЯ (Тільки для власника) */
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">First Name</label>
+                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t?.profile?.editForm?.fName || "First Name"}</label>
                       <input name="name" 
                             value={profile.name} 
                             onChange={handleChange}
                             className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Last Name</label>
+                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t?.profile?.editForm?.lName || "Last Name"}</label>
                       <input name="surname" 
                             value={profile.surname || ""} 
                             onChange={handleChange}
@@ -329,24 +332,23 @@ function Profile() {
                   </div>
                   
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Profession</label>
+                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t?.profile?.profession || "Profession"}</label>
                     <input name="profession" value={profile.profession} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Location</label>
+                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t?.profile?.location || "Location"}</label>
                       <input name="location" value={profile.location || ""} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Phone</label>
+                      <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t?.profile?.phone || "Phone"}</label>
                       <input name="phone" value={profile.phone || ""} onChange={handleChange} className="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-indigo-500" />
                     </div>
                   </div>
 
-                  {/* ДОСВІД (EXPERIENCE) РЕДАГУВАННЯ */}
                   <div className="border-t border-gray-100 pt-4 space-y-4">
-                    <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-2"><Briefcase size={14}/> Experience</h4>
+                    <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-2"><Briefcase size={14}/> {t?.profile?.experience || "Experience"}</h4>
                     <div className="space-y-2">
                       {profile.experiences?.map((exp, idx) => (
                         <div key={`exp-${idx}`} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-[10px]">
@@ -356,15 +358,16 @@ function Profile() {
                       ))}
                     </div>
                     <div className="space-y-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                      <input placeholder="Job Position" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
-                      <input placeholder="Years" value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
-                      <button type="button" onClick={() => { if(!newExp.title) return; setProfile({...profile, experiences: [...(profile.experiences || []), newExp]}); setNewExp({title:"", year:"", desc:""}) }} className="w-full py-2 bg-white border border-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold">+ Add Experience</button>
+                      <input placeholder={t?.profile?.editForm?.jobTitle || "Job Position"} value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
+                      <input placeholder={t?.profile?.editForm?.years || "Years"} value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
+                      <button type="button" onClick={() => { if(!newExp.title) return; setProfile({...profile, experiences: [...(profile.experiences || []), newExp]}); setNewExp({title:"", year:"", desc:""}) }} className="w-full py-2 bg-white border border-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold">
+                        {t?.profile?.editForm?.addExp || "+ Add Experience"}
+                      </button>
                     </div>
                   </div>
 
-                  {/* ОСВІТА (EDUCATION) РЕДАГУВАННЯ */}
                   <div className="border-t border-gray-100 pt-4 space-y-4">
-                    <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-2"><GraduationCap size={16}/> Education</h4>
+                    <h4 className="text-xs font-black uppercase text-indigo-600 flex items-center gap-2"><GraduationCap size={16}/> {t?.profile?.education || "Education"}</h4>
                     <div className="space-y-2">
                       {profile.education?.map((edu, idx) => (
                         <div key={`edu-${idx}`} className="flex justify-between items-center bg-gray-50 p-2 rounded-lg text-[10px]">
@@ -374,15 +377,16 @@ function Profile() {
                       ))}
                     </div>
                     <div className="space-y-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100">
-                      <input placeholder="University" value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
-                      <input placeholder="Year" value={newEdu.year} onChange={e => setNewEdu({...newEdu, year: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
-                      <button type="button" onClick={() => { if(!newEdu.school) return; setProfile({...profile, education: [...(profile.education || []), newEdu]}); setNewEdu({school:"", year:"", degree:""}) }} className="w-full py-2 bg-white border border-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold">+ Add Education</button>
+                      <input placeholder={t?.profile?.editForm?.uni || "University"} value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
+                      <input placeholder={t?.profile?.editForm?.year || "Year"} value={newEdu.year} onChange={e => setNewEdu({...newEdu, year: e.target.value})} className="w-full border-b bg-transparent py-1 text-xs outline-none" />
+                      <button type="button" onClick={() => { if(!newEdu.school) return; setProfile({...profile, education: [...(profile.education || []), newEdu]}); setNewEdu({school:"", year:"", degree:""}) }} className="w-full py-2 bg-white border border-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold">
+                        {t?.profile?.editForm?.addEdu || "+ Add Education"}
+                      </button>
                     </div>
                   </div>
 
-                  {/* СОЦМЕРЕЖІ РЕДАГУВАННЯ */}
                   <div className="border-t border-gray-100 pt-4 space-y-3">
-                    <label className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">Social Links</label>
+                    <label className="text-[10px] font-black uppercase text-indigo-600 tracking-widest">{t?.profile?.links || "Social Links"}</label>
                     <input name="website" placeholder="Website URL" value={profile.website} onChange={handleChange} className="w-full border rounded-xl px-4 py-2 text-sm outline-none" />
                     <input name="instagram" placeholder="Instagram URL" value={profile.instagram} onChange={handleChange} className="w-full border rounded-xl px-4 py-2 text-sm outline-none" />
                     <input name="linkedin" placeholder="LinkedIn URL" value={profile.linkedin} onChange={handleChange} className="w-full border rounded-xl px-4 py-2 text-sm outline-none" />
@@ -399,12 +403,12 @@ function Profile() {
                       className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                     />
                     <label htmlFor="available" className="text-sm font-bold text-gray-700 cursor-pointer">
-                      Available for projects
+                      {t?.profile?.availableLabel || "Available for projects"}
                     </label>
                   </div>
 
                   <div className="flex gap-3 pt-4">
-                    <button onClick={handleSaveProfile} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition shadow-lg"><Save size={18} /> Save</button>
+                    <button onClick={handleSaveProfile} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition shadow-lg"><Save size={18} /> {t?.common?.save || "Save"}</button>
                     <button onClick={() => setIsEditing(false)} className="px-5 bg-gray-100 text-gray-500 py-3 rounded-xl hover:bg-gray-200 transition"><X size={18} /></button>
                   </div>
                 </div>
@@ -412,10 +416,9 @@ function Profile() {
             </div>
           </div>
 
-          {/* ПРАВА ЧАСТИНА - ВОРКШОП (ПОРТФОЛІО ТА ПРОЄКТИ) */}
           <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-8">
-              <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">Portfolio & Projects</h3>
+              <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">{t?.profile?.workshop || "Portfolio & Projects"}</h3>
               {isOwner && <AddProjectButton userId={id} onSave={(newProj) => setPortfolios(prev => [newProj, ...prev])} />}
             </div>
 
@@ -456,8 +459,8 @@ function Profile() {
               ) : (
                 <div className="col-span-full text-center text-gray-400 py-32 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100 px-6">
                   <PlusCircle size={48} className="mx-auto text-gray-200 mb-4" />
-                  <p className="font-bold text-lg">Empty gallery</p>
-                  <p className="text-sm">This designer hasn't added any work yet.</p>
+                  <p className="font-bold text-lg">{t?.profile?.emptyGallery || "Empty gallery"}</p>
+                  <p className="text-sm">{t?.profile?.noWork || "This designer hasn't added any work yet."}</p>
                 </div>
               )}
             </div>

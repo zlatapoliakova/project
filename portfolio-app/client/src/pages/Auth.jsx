@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Loader2 } from "lucide-react";
 
 function Auth({ mode }) {
-  const { login } = useAuth();
+  const { login, t } = useAuth();
   const [isLogin, setIsLogin] = useState(mode === "login");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -31,13 +31,13 @@ function Auth({ mode }) {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!isLogin && !formData.name.trim()) newErrors.name = "First name is required";
-    if (!isLogin && !formData.lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!isLogin && !formData.name.trim()) newErrors.name = t.auth.validation.firstName;
+    if (!isLogin && !formData.lastName.trim()) newErrors.lastName = t.auth.validation.lastName;
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) newErrors.email = "Please enter a valid email";
+    if (!emailRegex.test(formData.email)) newErrors.email = t.auth.validation.email;
     
-    if (formData.password.length < 5) newErrors.password = "Password must be at least 5 characters";
+    if (formData.password.length < 5) newErrors.password = t.auth.validation.password;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -70,15 +70,17 @@ function Auth({ mode }) {
         login(data.user, data.token);
         navigate(`/profile/${userId}`);
       } else {
-        setErrors({ server: data.message || "Authentication failed" });
+        setErrors({ server: data.message || t.auth.validation.authFailed });
       }
     } catch (error) {
       console.error("Auth error:", error);
-      setErrors({ server: "Server is not responding. Please try again later." });
+      setErrors({ server: t.auth.validation.serverError });
     } finally {
       setLoading(false);
     }
   };
+
+  if (!t) return null;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
@@ -91,7 +93,7 @@ function Auth({ mode }) {
         </h1>
 
         <h2 className="text-lg font-bold text-center mb-8 text-gray-500 uppercase tracking-widest text-[10px]">
-          {isLogin ? "Welcome Back" : "Start your journey"}
+          {isLogin ? t.auth.welcome : t.auth.journey}
         </h2>
 
         {errors.server && (
@@ -104,7 +106,7 @@ function Auth({ mode }) {
           {!isLogin && (
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">First Name</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.auth.firstName}</label>
                 <input
                   name="name"
                   type="text"
@@ -116,7 +118,7 @@ function Auth({ mode }) {
                 {errors.name && <p className="text-[10px] text-red-500 font-bold ml-1">{errors.name}</p>}
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Last Name</label>
+                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.auth.lastName}</label>
                 <input
                   name="lastName"
                   type="text"
@@ -131,7 +133,7 @@ function Auth({ mode }) {
           )}
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Email Address</label>
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.auth.email}</label>
             <input
               name="email"
               type="email"
@@ -144,7 +146,7 @@ function Auth({ mode }) {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Password</label>
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.auth.password}</label>
             <input
               name="password"
               type="password"
@@ -164,16 +166,16 @@ function Auth({ mode }) {
             {loading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Processing...
+                {t.auth.processing}
               </>
             ) : (
-              isLogin ? "Login" : "Create Account"
+              isLogin ? t.auth.loginBtn : t.auth.registerBtn
             )}
           </button>
         </form>
 
         <p className="text-center text-[11px] font-bold mt-10 text-gray-400 uppercase tracking-widest">
-          {isLogin ? "New to Portify?" : "Already a member?"}
+          {isLogin ? t.auth.newTo : t.auth.alreadyMember}
           <span
             className="text-indigo-600 ml-2 cursor-pointer hover:underline"
             onClick={() => {
@@ -181,7 +183,7 @@ function Auth({ mode }) {
               setErrors({});
             }}
           >
-            {isLogin ? "Join now" : "Login here"}
+            {isLogin ? t.auth.joinNow : t.auth.loginHere}
           </span>
         </p>
       </div>

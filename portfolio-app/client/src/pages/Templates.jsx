@@ -1,4 +1,4 @@
-import React from 'react'; // Додано React import
+import React from 'react';
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
@@ -10,9 +10,15 @@ import { templates } from "../data/templatesData";
 
 function Templates() {
   const navigate = useNavigate();
-  const { user, loading } = useAuth(); // isAuth не використовується, прибрано
+  const { user, loading, t } = useAuth();
 
-  if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center font-bold">Loading...</div>;
+  if (loading || !t) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center font-bold">
+        {t?.common?.loading || "Loading..."}
+      </div>
+    );
+  }
 
   const handleSelectTemplate = async (template) => {
     const userId = user?.id || user?._id;
@@ -26,8 +32,8 @@ function Templates() {
       owner: userId,
       template: template.id,
       data: {
-        name: user.name || user.userName?.split(' ')[0] || "Name", // Додано захист від undefined userName
-        surname: user.surname || user.userName?.split(' ')[1] || "Surname", // Додано захист від undefined userName
+        name: user.name || user.userName?.split(' ')[0] || "Name",
+        surname: user.surname || user.userName?.split(' ')[1] || "Surname",
         avatar: user.avatar,
         profession: user.profession || "",
         bio: user.bio || "",
@@ -50,11 +56,11 @@ function Templates() {
         const portfolioId = newPortfolio._id || newPortfolio.id;
         navigate(`/portfolio-editor/${portfolioId}`);
       } else {
-        alert("Помилка при створенні портфоліо");
+        alert(t.templates.errorCreate);
       }
     } catch (error) {
       console.error("Fetch error:", error);
-      alert("Не вдалося підключитися до сервера.");
+      alert(t.templates.serverError);
     }
   };
 
@@ -63,14 +69,20 @@ function Templates() {
       <Header />
 
       <div className="max-w-7xl mx-auto px-8 py-16 flex-1">
-        <h1 className="text-4xl font-bold mb-3 text-gray-900 tracking-tight">Templates</h1>
+        <h1 className="text-4xl font-bold mb-3 text-gray-900 tracking-tight">
+          {t.templates.title}
+        </h1>
         <p className="text-gray-500 mb-12 max-w-2xl">
-          Choose a template to quickly start your professional portfolio page with your profile data.
+          {t.templates.subtitle}
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {templates.map((tpl) => (
-            <TemplateCard key={tpl.id} template={tpl} onSelect={() => handleSelectTemplate(tpl)} />
+            <TemplateCard 
+              key={tpl.id} 
+              template={tpl} 
+              onSelect={() => handleSelectTemplate(tpl)} 
+            />
           ))}
         </div>
       </div>

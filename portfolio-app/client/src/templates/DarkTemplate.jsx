@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function DarkTemplate({ initialData, id: propId, readOnly = false }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, t } = useAuth();
   const { id: urlId } = useParams();
   const id = propId || urlId;
 
@@ -20,7 +20,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
     name: "Name",
     surname: "Surname",
     profession: "Creative Expert",
-    bio: "Focusing on high-end digital solutions and dark aesthetics.",
+    bio: "",
     avatar: "",
     projects: [],
     experiences: [],
@@ -52,11 +52,11 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
   const handleShare = () => {
     const viewUrl = `${window.location.origin}/view-portfolio/${id}`;
     navigator.clipboard.writeText(viewUrl);
-    alert("Публічне посилання скопійовано!");
+    alert(t.darkTemplate.shareSuccess);
   };
 
   const handleAddProjectToDB = async () => {
-    if (!newProject.title.trim()) return alert("Введіть назву проєкту");
+    if (!newProject.title.trim()) return alert(t.darkTemplate.titleError);
     setLoading(true);
 
     const formData = new FormData();
@@ -78,7 +78,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
         const savedProject = await res.json();
         setResume(prev => ({ ...prev, projects: [...prev.projects, savedProject] }));
         setNewProject({ title: "", description: "", link: "", image: "", category: "", file: null });
-        alert("Проєкт додано!");
+        alert(t.darkTemplate.addSuccess);
       }
     } catch (error) { console.error(error); } finally { setLoading(false); }
   };
@@ -100,7 +100,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
 
       if (response.ok) {
         setIsEditing(false);
-        alert("Зміни збережено!");
+        alert(t.darkTemplate.saveSuccess);
       }
     } catch (error) { console.error("Save error:", error); } finally { setLoading(false); }
   };
@@ -109,6 +109,8 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
     if (!path) return "";
     return path.startsWith('http') || path.startsWith('data:') ? path : `http://localhost:5000${path}`;
   };
+
+  if (!t) return null;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white font-sans selection:bg-indigo-500">
@@ -123,11 +125,11 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
           </button>
           {!isEditing ? (
             <button onClick={() => setIsEditing(true)} className="bg-white text-black px-6 py-2 rounded-full flex items-center gap-2 font-bold shadow-xl hover:scale-105 transition">
-              <Edit3 size={18} /> Edit
+              <Edit3 size={18} /> {t.darkTemplate.edit}
             </button>
           ) : (
             <button onClick={saveResume} disabled={loading} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 font-bold hover:bg-indigo-700 shadow-lg transition">
-              <Check size={18} /> {loading ? "Saving..." : "Save Changes"}
+              <Check size={18} /> {loading ? t.darkTemplate.saving : t.darkTemplate.saveChanges}
             </button>
           )}
         </div>
@@ -154,20 +156,20 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
           <div className="space-y-6 max-w-2xl mx-auto text-left">
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">First Name</label>
+                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">{t.darkTemplate.firstName}</label>
                 <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-xl" />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">Last Name</label>
+                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">{t.darkTemplate.lastName}</label>
                 <input value={resume.surname} onChange={e => setResume({...resume, surname: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-xl" />
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">Profession</label>
+              <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">{t.darkTemplate.profession}</label>
               <input value={resume.profession} onChange={e => setResume({...resume, profession: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-indigo-400" />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">Bio Summary</label>
+              <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">{t.darkTemplate.bio}</label>
               <textarea value={resume.bio} onChange={e => setResume({...resume, bio: e.target.value})} className="bg-gray-900 border border-gray-800 rounded-xl p-4 outline-none focus:border-indigo-500 h-24 resize-none italic" />
             </div>
           </div>
@@ -182,7 +184,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
 
       <section className="max-w-7xl mx-auto py-20 px-8 grid md:grid-cols-2 gap-16 border-t border-gray-900">
         <div className="space-y-8">
-          <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><Briefcase className="text-indigo-500"/> Experience</h3>
+          <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><Briefcase className="text-indigo-500"/> {t.darkTemplate.experience}</h3>
           <div className="space-y-6">
             {resume.experiences.map((exp, idx) => (
               <div key={idx} className="relative p-6 bg-gray-900/50 rounded-2xl border border-gray-800 group">
@@ -195,17 +197,17 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
           </div>
           {isEditing && (
             <div className="p-6 bg-gray-900 rounded-2xl space-y-4 border border-indigo-500/20">
-              <input placeholder="Position" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
-              <input placeholder="Year" value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder={t.darkTemplate.placeholders.pos} value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder={t.darkTemplate.placeholders.year} value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
               <button onClick={() => { if(!newExp.title) return; setResume({...resume, experiences: [...resume.experiences, newExp]}); setNewExp({title:"", year:"", desc:""})}} className="w-full bg-indigo-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition">
-                <Plus size={18}/> Add Experience
+                <Plus size={18}/> {t.darkTemplate.addExperience}
               </button>
             </div>
           )}
         </div>
 
         <div className="space-y-8">
-          <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><GraduationCap className="text-indigo-500"/> Education</h3>
+          <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><GraduationCap className="text-indigo-500"/> {t.darkTemplate.education}</h3>
           <div className="space-y-6">
             {resume.education.map((edu, idx) => (
               <div key={idx} className="relative p-6 bg-gray-900/50 rounded-2xl border border-gray-800 group">
@@ -218,10 +220,10 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
           </div>
           {isEditing && (
             <div className="p-6 bg-gray-900 rounded-2xl space-y-4 border border-indigo-500/20">
-              <input placeholder="University" value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
-              <input placeholder="Degree" value={newEdu.degree} onChange={e => setNewEdu({...newEdu, degree: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder={t.darkTemplate.placeholders.uni} value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder={t.darkTemplate.placeholders.degree} value={newEdu.degree} onChange={e => setNewEdu({...newEdu, degree: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
               <button onClick={() => { if(!newEdu.school) return; setResume({...resume, education: [...resume.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition">
-                <Plus size={18}/> Add Education
+                <Plus size={18}/> {t.darkTemplate.addEducation}
               </button>
             </div>
           )}
@@ -229,7 +231,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
       </section>
 
       <section className="max-w-7xl mx-auto py-20 px-8 border-t border-gray-900">
-        <h2 className="text-4xl font-black mb-12 uppercase tracking-tighter text-indigo-500">Selected Projects</h2>
+        <h2 className="text-4xl font-black mb-12 uppercase tracking-tighter text-indigo-500">{t.darkTemplate.selectedProjects}</h2>
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {resume.projects.map((p, idx) => (
             <div 
@@ -257,7 +259,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                 {p.image ? (
                   <img src={getFullImg(p.image)} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={p.title} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-700">No Image</div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-700">{t.darkTemplate.noImage}</div>
                 )}
                 {!isEditing && p.link && (
                   <div className="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -275,24 +277,24 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
 
         {isEditing && isOwner && (
           <div className="p-10 bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-800">
-            <h3 className="text-2xl font-black mb-10 text-center uppercase tracking-widest text-white">Add New Project</h3>
+            <h3 className="text-2xl font-black mb-10 text-center uppercase tracking-widest text-white">{t.darkTemplate.newProject}</h3>
             <div className="grid md:grid-cols-2 gap-12 text-left">
               <div className="space-y-6">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">Project Title *</label>
-                  <input placeholder="Project Name" value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-4 outline-none w-full focus:border-indigo-500 rounded-lg" />
+                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">{t.darkTemplate.projectTitle}</label>
+                  <input placeholder={t.darkTemplate.placeholders.projName} value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-4 outline-none w-full focus:border-indigo-500 rounded-lg" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">URL Link</label>
+                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">{t.darkTemplate.projectUrl}</label>
                   <input placeholder="https://..." value={newProject.link} onChange={e => setNewProject({...newProject, link: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-4 outline-none w-full focus:border-indigo-500 rounded-lg" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">Description</label>
-                  <textarea placeholder="Describe your work" value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} className="bg-gray-900 border border-gray-800 p-4 w-full h-24 outline-none focus:border-indigo-500 rounded-xl resize-none" />
+                  <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">{t.darkTemplate.projectDesc}</label>
+                  <textarea placeholder={t.darkTemplate.placeholders.desc} value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} className="bg-gray-900 border border-gray-800 p-4 w-full h-24 outline-none focus:border-indigo-500 rounded-xl resize-none" />
                 </div>
               </div>
               <div className="flex flex-col">
-                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 mb-2">Project Cover</label>
+                <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 mb-2">{t.darkTemplate.projectCover}</label>
                 <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 rounded-3xl border-2 border-dashed border-gray-800 p-8 relative min-h-[300px]">
                   {newProject.image ? (
                     <div className="relative w-full h-full">
@@ -302,11 +304,11 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                   ) : (
                     <>
                       <Upload size={48} className="text-gray-800 mb-4" />
-                      <p className="text-gray-500 text-sm">Click to upload image</p>
+                      <p className="text-gray-500 text-sm">{t.darkTemplate.clickUpload}</p>
                     </>
                   )}
                   <label className="mt-6 cursor-pointer bg-white text-black px-10 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all shadow-lg active:scale-95">
-                    {newProject.image ? "Change Image" : "Upload Image"}
+                    {newProject.image ? t.darkTemplate.changeImage : t.darkTemplate.uploadImage}
                     <input type="file" className="hidden" accept="image/*" onChange={e => {
                       const file = e.target.files[0];
                       if (file) setNewProject({...newProject, file, image: URL.createObjectURL(file)});
@@ -316,14 +318,16 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
               </div>
             </div>
             <button onClick={handleAddProjectToDB} disabled={loading} className="mt-12 w-full bg-indigo-600 text-white py-6 rounded-2xl font-black uppercase tracking-[4px] hover:bg-indigo-700 shadow-2xl transition disabled:bg-gray-800">
-              {loading ? "Processing..." : "Create & Sync Project"}
+              {loading ? t.darkTemplate.processing : t.darkTemplate.createSync}
             </button>
           </div>
         )}
       </section>
 
       <footer className="py-20 text-center border-t border-gray-900">
-        <p className="text-gray-600 font-bold uppercase tracking-widest text-[10px]">© {new Date().getFullYear()} {resume.name} {resume.surname}</p>
+        <p className="text-gray-600 font-bold uppercase tracking-widest text-[10px]">
+          © {new Date().getFullYear()} {resume.name} {resume.surname}. {t.darkTemplate.allRightsReserved}
+        </p>
       </footer>
     </div>
   );

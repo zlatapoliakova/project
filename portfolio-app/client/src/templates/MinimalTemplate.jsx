@@ -4,12 +4,11 @@ import {
   Upload, ArrowLeft, Trash2, ExternalLink, 
   Edit3, Check, Camera, Share2, GraduationCap, Briefcase 
 } from "lucide-react";
-
 import { useAuth } from "../context/AuthContext";
 
 function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, t } = useAuth();
   const { id: urlId } = useParams();
   const id = propId || urlId;
 
@@ -17,10 +16,10 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
   const isOwner = userId === (initialData?.owner?._id || initialData?.owner);
 
   const [resume, setResume] = useState({
-    name: "Name",
-    surname: "Surname",
-    profession: "Your Profession",
-    bio: "Creative designer and developer.",
+    name: "",
+    surname: "",
+    profession: "",
+    bio: "",
     avatar: "",
     projects: [],
     experiences: [],
@@ -56,11 +55,11 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
   const handleShare = () => {
     const viewUrl = `${window.location.origin}/view-portfolio/${id}`;
     navigator.clipboard.writeText(viewUrl);
-    alert("Публічне посилання копійовано!");
+    alert(t.minimalTemplate.shareSuccess);
   };
 
   const handleAddProjectToDB = async () => {
-    if (!newProject.title.trim()) return alert("Enter project title");
+    if (!newProject.title.trim()) return alert(t.modals.validation.title);
     setLoading(true);
 
     const formData = new FormData();
@@ -82,9 +81,13 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
         const savedProject = await resProject.json();
         setResume(prev => ({ ...prev, projects: [...prev.projects, savedProject] }));
         setNewProject({ title: "", description: "", link: "", image: "", category: "", file: null });
-        alert("Проєкт додано!");
+        alert(t.minimalTemplate.addProjectSuccess);
       }
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) { 
+      console.error(error); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   const saveResume = async () => {
@@ -104,10 +107,16 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
 
       if (response.ok) {
         setIsEditing(false);
-        alert("Зміни збережено!");
+        alert(t.minimalTemplate.saveSuccess);
       }
-    } catch (error) { console.error("Save error:", error); } finally { setLoading(false); }
+    } catch (error) { 
+      console.error("Save error:", error); 
+    } finally { 
+      setLoading(false); 
+    }
   };
+
+  if (!t) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans selection:bg-indigo-100">
@@ -117,9 +126,9 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
           <button onClick={() => navigate(`/profile/${userId}`)} className="bg-white shadow-xl p-3 rounded-full border hover:bg-gray-50 transition"><ArrowLeft size={20} /></button>
           <button onClick={handleShare} className="bg-white shadow-xl p-3 rounded-full border hover:bg-gray-50 transition text-indigo-600"><Share2 size={20} /></button>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:scale-105 transition"><Edit3 size={18} /> Edit</button>
+            <button onClick={() => setIsEditing(true)} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:scale-105 transition"><Edit3 size={18} /> {t.minimalTemplate.edit}</button>
           ) : (
-            <button onClick={saveResume} disabled={loading} className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl hover:bg-green-700 font-bold transition"><Check size={18} /> Save Changes</button>
+            <button onClick={saveResume} disabled={loading} className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl hover:bg-green-700 font-bold transition"><Check size={18} /> {t.minimalTemplate.saveChanges}</button>
           )}
         </div>
       )}
@@ -144,21 +153,21 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-left">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">First Name</label>
-                    <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="w-full font-black text-2xl border-b p-2 focus:border-indigo-500 outline-none" placeholder="Name" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t.minimalTemplate.firstName}</label>
+                    <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="w-full font-black text-2xl border-b p-2 focus:border-indigo-500 outline-none" />
                   </div>
                   <div className="text-left">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Last Name</label>
-                    <input value={resume.surname} onChange={e => setResume({...resume, surname: e.target.value})} className="w-full font-black text-2xl border-b p-2 focus:border-indigo-500 outline-none" placeholder="Surname" />
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t.minimalTemplate.lastName}</label>
+                    <input value={resume.surname} onChange={e => setResume({...resume, surname: e.target.value})} className="w-full font-black text-2xl border-b p-2 focus:border-indigo-500 outline-none" />
                   </div>
                 </div>
                 <div className="text-left">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
-                  <input value={resume.profession} onChange={e => setResume({...resume, profession: e.target.value})} className="w-full text-indigo-600 font-bold text-xl border-b p-2 outline-none" placeholder="Profession" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t.minimalTemplate.profession}</label>
+                  <input value={resume.profession} onChange={e => setResume({...resume, profession: e.target.value})} className="w-full text-indigo-600 font-bold text-xl border-b p-2 outline-none" />
                 </div>
                 <div className="text-left">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Bio Summary</label>
-                  <textarea value={resume.bio} onChange={e => setResume({...resume, bio: e.target.value})} className="w-full text-gray-500 border rounded-xl p-4 outline-none italic resize-none" rows="3" placeholder="Short bio..." />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t.minimalTemplate.bio}</label>
+                  <textarea value={resume.bio} onChange={e => setResume({...resume, bio: e.target.value})} className="w-full text-gray-500 border rounded-xl p-4 outline-none italic resize-none" rows="3" placeholder={t.minimalTemplate.bioPlaceholder} />
                 </div>
               </div>
             ) : (
@@ -173,7 +182,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
 
         <div className="grid md:grid-cols-2 gap-12 mb-16 border-t pt-12">
           <section>
-            <h2 className="text-2xl font-black mb-8 flex items-center gap-2 uppercase tracking-tighter"><Briefcase className="text-indigo-600"/> Experience</h2>
+            <h2 className="text-2xl font-black mb-8 flex items-center gap-2 uppercase tracking-tighter"><Briefcase className="text-indigo-600"/> {t.minimalTemplate.experience}</h2>
             <div className="space-y-6">
               {resume.experiences.map((exp, idx) => (
                 <div key={idx} className="relative group pl-6 border-l-2 border-indigo-100">
@@ -186,15 +195,15 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
             </div>
             {isEditing && (
               <div className="mt-6 p-4 bg-gray-50 rounded-2xl space-y-3">
-                <input placeholder="Job Position" value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
-                <input placeholder="Period (e.g. 2020 - 2022)" value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
-                <button onClick={() => { if(!newExp.title) return; setResume({...resume, experiences: [...resume.experiences, newExp]}); setNewExp({title:"", year:"", desc:""})}} className="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold">+ Add Experience</button>
+                <input placeholder={t.minimalTemplate.jobPlaceholder} value={newExp.title} onChange={e => setNewExp({...newExp, title: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
+                <input placeholder={t.minimalTemplate.periodPlaceholder} value={newExp.year} onChange={e => setNewExp({...newExp, year: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
+                <button onClick={() => { if(!newExp.title) return; setResume({...resume, experiences: [...resume.experiences, newExp]}); setNewExp({title:"", year:"", desc:""})}} className="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold">{t.minimalTemplate.addExperience}</button>
               </div>
             )}
           </section>
 
           <section>
-            <h2 className="text-2xl font-black mb-8 flex items-center gap-2 uppercase tracking-tighter"><GraduationCap className="text-indigo-600"/> Education</h2>
+            <h2 className="text-2xl font-black mb-8 flex items-center gap-2 uppercase tracking-tighter"><GraduationCap className="text-indigo-600"/> {t.minimalTemplate.education}</h2>
             <div className="space-y-6">
               {resume.education.map((edu, idx) => (
                 <div key={idx} className="relative group pl-6 border-l-2 border-indigo-100">
@@ -207,21 +216,21 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
             </div>
             {isEditing && (
               <div className="mt-6 p-4 bg-gray-50 rounded-2xl space-y-3">
-                <input placeholder="University / School" value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
-                <input placeholder="Graduation Year" value={newEdu.year} onChange={e => setNewEdu({...newEdu, year: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
-                <button onClick={() => { if(!newEdu.school) return; setResume({...resume, education: [...resume.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold">+ Add Education</button>
+                <input placeholder={t.minimalTemplate.schoolPlaceholder} value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
+                <input placeholder={t.minimalTemplate.yearPlaceholder} value={newEdu.year} onChange={e => setNewEdu({...newEdu, year: e.target.value})} className="w-full p-2 text-sm rounded-lg border outline-none" />
+                <button onClick={() => { if(!newEdu.school) return; setResume({...resume, education: [...resume.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold">{t.minimalTemplate.addEducation}</button>
               </div>
             )}
           </section>
         </div>
 
         <section className="border-t pt-12">
-          <h2 className="text-3xl font-black mb-8 text-center uppercase tracking-tighter">Featured Projects</h2>
+          <h2 className="text-3xl font-black mb-8 text-center uppercase tracking-tighter">{t.minimalTemplate.featuredProjects}</h2>
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {resume.projects.map((p, idx) => (
               <div key={p._id || idx} onClick={() => !isEditing && p.link && window.open(p.link.startsWith('http') ? p.link : `https://${p.link}`, "_blank")} className={`group bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all hover:shadow-2xl ${!isEditing && p.link ? 'cursor-pointer' : ''}`}>
                 <div className="aspect-video bg-gray-50 relative overflow-hidden">
-                  {p.image ? <img src={getFullImg(p.image)} className="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt={p.title} /> : <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>}
+                  {p.image ? <img src={getFullImg(p.image)} className="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt={p.title} /> : <div className="w-full h-full flex items-center justify-center text-gray-300">{t.minimalTemplate.noImage}</div>}
                   {!isEditing && p.link && <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><ExternalLink size={32} className="text-white drop-shadow-lg" /></div>}
                 </div>
                 <div className="p-6">
@@ -238,28 +247,28 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
 
           {isEditing && (
             <div className="p-8 bg-indigo-50/30 rounded-[32px] border-2 border-dashed border-indigo-100">
-              <h3 className="text-indigo-900 font-bold mb-6 text-xl text-center uppercase tracking-widest">New Project</h3>
+              <h3 className="text-indigo-900 font-bold mb-6 text-xl text-center uppercase tracking-widest">{t.minimalTemplate.newProject}</h3>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Project Title *</label>
+                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.minimalTemplate.projectTitle}</label>
                     <input value={newProject.title} onChange={e => setNewProject({...newProject, title: e.target.value})} className="w-full p-3 rounded-xl border outline-none focus:border-indigo-500 bg-white" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">URL / Link</label>
+                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.minimalTemplate.projectUrl}</label>
                     <input value={newProject.link} onChange={e => setNewProject({...newProject, link: e.target.value})} className="w-full p-3 rounded-xl border outline-none focus:border-indigo-500 bg-white" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Description</label>
+                    <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.minimalTemplate.projectDesc}</label>
                     <textarea value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})} className="w-full p-3 rounded-xl border h-24 outline-none focus:border-indigo-500 bg-white resize-none" />
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-[10px] font-black uppercase text-gray-400 ml-1 mb-1">Project Cover</label>
+                  <label className="text-[10px] font-black uppercase text-gray-400 ml-1 mb-1">{t.minimalTemplate.projectCover}</label>
                   <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-2xl border-2 border-dashed border-gray-200 p-4 relative">
                     {newProject.image ? <img src={newProject.image} className="h-40 w-full object-cover rounded-xl" alt="Preview" /> : <Upload size={32} className="text-gray-200" />}
                     <label className="mt-4 cursor-pointer bg-black text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition">
-                      {newProject.image ? "Change Image" : "Select Image"}
+                      {newProject.image ? t.minimalTemplate.changeImage : t.minimalTemplate.selectImage}
                       <input type="file" className="hidden" accept="image/*" onChange={e => {
                         const file = e.target.files[0];
                         if (file) setNewProject({...newProject, file, image: URL.createObjectURL(file)});
@@ -269,7 +278,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
                 </div>
               </div>
               <button onClick={handleAddProjectToDB} disabled={loading} className="mt-8 w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl transition active:scale-[0.98]">
-                {loading ? "Processing..." : "Create Project & Add to Grid"}
+                {loading ? t.minimalTemplate.processing : t.minimalTemplate.createBtn}
               </button>
             </div>
           )}
@@ -277,7 +286,9 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
       </div>
 
       <footer className="mt-20 text-center text-gray-400 py-10 border-t border-gray-100">
-        <p className="text-[10px] font-black uppercase tracking-[4px]">© {new Date().getFullYear()} {resume.name} {resume.surname}</p>
+        <p className="text-[10px] font-black uppercase tracking-[4px]">
+          © {new Date().getFullYear()} {resume.name} {resume.surname}. {t.minimalTemplate.allRightsReserved}
+        </p>
       </footer>
     </div>
   );

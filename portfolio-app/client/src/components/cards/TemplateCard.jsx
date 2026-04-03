@@ -1,4 +1,12 @@
+import { useAuth } from "../../context/AuthContext";
+
 function TemplateCard({ template, onSelect }) {
+  const { t } = useAuth();
+
+  if (!t) return null;
+
+  const itemTranslation = t.templates.items[template.id];
+
   return (
     <div className="group bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col">
       
@@ -6,7 +14,7 @@ function TemplateCard({ template, onSelect }) {
         
         <img
           src={template.image}
-          alt={template.title}
+          alt={itemTranslation?.title || template.title}
           className="template-card-img"
         />
 
@@ -18,15 +26,17 @@ function TemplateCard({ template, onSelect }) {
             }}
             className="bg-white text-gray-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-transform scale-90 group-hover:scale-100"
           >
-            Select Template
+            {t.templates.selectBtn}
           </button>
         </div>
       </div>
 
       <div className="p-5 bg-white z-20">
-        <h3 className="font-bold text-lg text-gray-900">{template.title}</h3>
+        <h3 className="font-bold text-lg text-gray-900">
+          {itemTranslation?.title || template.title}
+        </h3>
         <p className="text-gray-500 text-sm mt-1">
-          {template.description || "Ready-made portfolio layout"}
+          {itemTranslation?.desc || t.templates.defaultDesc}
         </p>
       </div>
     </div>
