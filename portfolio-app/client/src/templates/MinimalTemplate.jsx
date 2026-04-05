@@ -122,23 +122,23 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
     <div className="min-h-screen bg-gray-50 pb-20 font-sans selection:bg-indigo-100">
       
       {isOwner && !readOnly && (
-        <div className="fixed top-6 right-6 z-50 flex gap-3 print:hidden">
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:top-6 sm:right-6 z-50 flex flex-wrap justify-end gap-2 sm:gap-3 print:hidden">
           <button onClick={() => navigate(`/profile/${userId}`)} className="bg-white shadow-xl p-3 rounded-full border hover:bg-gray-50 transition"><ArrowLeft size={20} /></button>
           <button onClick={handleShare} className="bg-white shadow-xl p-3 rounded-full border hover:bg-gray-50 transition text-indigo-600"><Share2 size={20} /></button>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:scale-105 transition"><Edit3 size={18} /> {t.minimalTemplate.edit}</button>
+            <button onClick={() => setIsEditing(true)} className="bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-full flex items-center gap-2 shadow-xl font-bold hover:scale-105 transition text-sm sm:text-base"><Edit3 size={18} /> {t.minimalTemplate.edit}</button>
           ) : (
-            <button onClick={saveResume} disabled={loading} className="bg-green-600 text-white px-6 py-2 rounded-full flex items-center gap-2 shadow-xl hover:bg-green-700 font-bold transition"><Check size={18} /> {t.minimalTemplate.saveChanges}</button>
+            <button onClick={saveResume} disabled={loading} className="bg-green-600 text-white px-4 sm:px-6 py-2 rounded-full flex items-center gap-2 shadow-xl hover:bg-green-700 font-bold transition text-sm sm:text-base"><Check size={18} /> {t.minimalTemplate.saveChanges}</button>
           )}
         </div>
       )}
 
-      <div className="max-w-5xl mx-auto bg-white p-10 mt-10 rounded-3xl shadow-xl border border-gray-100">
+      <div className="max-w-5xl mx-auto bg-white p-4 sm:p-6 lg:p-10 mt-20 sm:mt-24 rounded-3xl shadow-xl border border-gray-100">
         
         <div className="flex flex-col items-center mb-12">
           <label className={`w-32 h-32 mb-6 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg relative group ${isEditing ? 'cursor-pointer' : ''}`}>
             {resume.avatar ? <img src={getFullImg(resume.avatar)} className="w-full h-full object-cover" alt="Avatar" /> : <Upload className="text-gray-400" />}
-            {isEditing && <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition opacity-0 group-hover:opacity-100"><Camera size={24} className="text-white" /></div>}
+            {isEditing && <div className="absolute inset-0 bg-black/40 flex items-center justify-center transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100"><Camera size={24} className="text-white" /></div>}
             <input type="file" className="hidden" disabled={!isEditing} onChange={e => {
               const file = e.target.files[0];
               if (!file) return;
@@ -151,7 +151,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
           <div className="w-full max-w-2xl text-center space-y-4">
             {isEditing ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="text-left">
                     <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{t.minimalTemplate.firstName}</label>
                     <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="w-full font-black text-2xl border-b p-2 focus:border-indigo-500 outline-none" />
@@ -172,15 +172,15 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
               </div>
             ) : (
               <div className="text-center">
-                <h1 className="font-black text-5xl mb-2">{resume.name} {resume.surname}</h1>
-                <h2 className="text-indigo-600 font-bold text-xl mb-4 uppercase tracking-widest">{resume.profession}</h2>
-                <p className="text-gray-500 max-w-2xl italic mx-auto text-lg leading-relaxed">"{resume.bio}"</p>
+                <h1 className="font-black text-3xl sm:text-4xl lg:text-5xl mb-2 break-words">{resume.name} {resume.surname}</h1>
+                <h2 className="text-indigo-600 font-bold text-lg sm:text-xl mb-4 uppercase tracking-widest break-words">{resume.profession}</h2>
+                <p className="text-gray-500 max-w-2xl italic mx-auto text-base sm:text-lg leading-relaxed break-words">"{resume.bio}"</p>
               </div>
             )}
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 mb-16 border-t pt-12">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-12 sm:mb-16 border-t pt-8 sm:pt-12">
           <section>
             <h2 className="text-2xl font-black mb-8 flex items-center gap-2 uppercase tracking-tighter"><Briefcase className="text-indigo-600"/> {t.minimalTemplate.experience}</h2>
             <div className="space-y-6">
@@ -189,7 +189,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
                   <h3 className="font-bold text-lg">{exp.title || exp.position}</h3>
                   <span className="text-indigo-600 text-sm font-bold">{exp.year || exp.years}</span>
                   <p className="text-gray-500 text-sm mt-2">{exp.desc || exp.description}</p>
-                  {isEditing && <button onClick={() => setResume({...resume, experiences: resume.experiences.filter((_, i) => i !== idx)})} className="absolute top-0 -left-3 bg-white text-red-500 p-1 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition"><Trash2 size={14}/></button>}
+                  {isEditing && <button onClick={() => setResume({...resume, experiences: resume.experiences.filter((_, i) => i !== idx)})} className="absolute top-0 -left-3 bg-white text-red-500 p-1 rounded-full shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"><Trash2 size={14}/></button>}
                 </div>
               ))}
             </div>
@@ -210,7 +210,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
                   <h3 className="font-bold text-lg">{edu.school}</h3>
                   <span className="text-indigo-600 text-sm font-bold">{edu.year}</span>
                   <p className="text-gray-500 text-sm mt-1">{edu.degree}</p>
-                  {isEditing && <button onClick={() => setResume({...resume, education: resume.education.filter((_, i) => i !== idx)})} className="absolute top-0 -left-3 bg-white text-red-500 p-1 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition"><Trash2 size={14}/></button>}
+                  {isEditing && <button onClick={() => setResume({...resume, education: resume.education.filter((_, i) => i !== idx)})} className="absolute top-0 -left-3 bg-white text-red-500 p-1 rounded-full shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"><Trash2 size={14}/></button>}
                 </div>
               ))}
             </div>
@@ -225,13 +225,13 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
         </div>
 
         <section className="border-t pt-12">
-          <h2 className="text-3xl font-black mb-8 text-center uppercase tracking-tighter">{t.minimalTemplate.featuredProjects}</h2>
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <h2 className="text-2xl sm:text-3xl font-black mb-8 text-center uppercase tracking-tighter">{t.minimalTemplate.featuredProjects}</h2>
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-8 mb-12">
             {resume.projects.map((p, idx) => (
               <div key={p._id || idx} onClick={() => !isEditing && p.link && window.open(p.link.startsWith('http') ? p.link : `https://${p.link}`, "_blank")} className={`group bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden transition-all hover:shadow-2xl ${!isEditing && p.link ? 'cursor-pointer' : ''}`}>
                 <div className="aspect-video bg-gray-50 relative overflow-hidden">
                   {p.image ? <img src={getFullImg(p.image)} className="w-full h-full object-cover transition duration-700 group-hover:scale-110" alt={p.title} /> : <div className="w-full h-full flex items-center justify-center text-gray-300">{t.minimalTemplate.noImage}</div>}
-                  {!isEditing && p.link && <div className="absolute inset-0 bg-indigo-600/10 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><ExternalLink size={32} className="text-white drop-shadow-lg" /></div>}
+                  {!isEditing && p.link && <div className="absolute inset-0 bg-indigo-600/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition flex items-center justify-center"><ExternalLink size={32} className="text-white drop-shadow-lg" /></div>}
                 </div>
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-2">
@@ -246,9 +246,9 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
           </div>
 
           {isEditing && (
-            <div className="p-8 bg-indigo-50/30 rounded-[32px] border-2 border-dashed border-indigo-100">
-              <h3 className="text-indigo-900 font-bold mb-6 text-xl text-center uppercase tracking-widest">{t.minimalTemplate.newProject}</h3>
-              <div className="grid md:grid-cols-2 gap-8">
+            <div className="p-4 sm:p-6 lg:p-8 bg-indigo-50/30 rounded-[32px] border-2 border-dashed border-indigo-100">
+              <h3 className="text-indigo-900 font-bold mb-6 text-lg sm:text-xl text-center uppercase tracking-widest">{t.minimalTemplate.newProject}</h3>
+              <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.minimalTemplate.projectTitle}</label>
@@ -266,7 +266,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
                 <div className="flex flex-col">
                   <label className="text-[10px] font-black uppercase text-gray-400 ml-1 mb-1">{t.minimalTemplate.projectCover}</label>
                   <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-2xl border-2 border-dashed border-gray-200 p-4 relative">
-                    {newProject.image ? <img src={newProject.image} className="h-40 w-full object-cover rounded-xl" alt="Preview" /> : <Upload size={32} className="text-gray-200" />}
+                    {newProject.image ? <img src={newProject.image} className="h-32 sm:h-40 w-full object-cover rounded-xl" alt="Preview" /> : <Upload size={32} className="text-gray-200" />}
                     <label className="mt-4 cursor-pointer bg-black text-white px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition">
                       {newProject.image ? t.minimalTemplate.changeImage : t.minimalTemplate.selectImage}
                       <input type="file" className="hidden" accept="image/*" onChange={e => {
@@ -277,7 +277,7 @@ function MinimalTemplate({ initialData, id: propId, readOnly = false }) {
                   </div>
                 </div>
               </div>
-              <button onClick={handleAddProjectToDB} disabled={loading} className="mt-8 w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl transition active:scale-[0.98]">
+              <button onClick={handleAddProjectToDB} disabled={loading} className="mt-8 w-full bg-indigo-600 text-white py-4 sm:py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 shadow-xl transition active:scale-[0.98]">
                 {loading ? t.minimalTemplate.processing : t.minimalTemplate.createBtn}
               </button>
             </div>

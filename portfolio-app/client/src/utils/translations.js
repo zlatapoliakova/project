@@ -104,6 +104,7 @@ export const translations = {
         jobTitle: "Job Position",
         years: "Years (e.g. 2022 - Present)",
         uni: "University",
+        degree: "Degree",
         year: "Year",
         success: "Profile successfully saved!",
         error: "Save failed"
@@ -261,7 +262,9 @@ export const translations = {
         prof: "Profession",
         about: "About Me",
         pos: "Position",
-        uni: "University"
+        uni: "University",
+        year: "Year",
+        degree: "Degree"
       },
       allRightsReserved: "All rights reserved."
     },
@@ -409,6 +412,7 @@ export const translations = {
         jobTitle: "Посада",
         years: "Роки (напр. 2022 - н.ч.)",
         uni: "Університет",
+        degree: "Ступінь",
         year: "Рік",
         success: "Профіль успішно збережено!",
         error: "Помилка збереження"
@@ -566,7 +570,9 @@ export const translations = {
         prof: "Професія",
         about: "Про себе",
         pos: "Посада",
-        uni: "Університет"
+        uni: "Університет",
+        year: "Рік",
+        degree: "Ступінь"
       },
       allRightsReserved: "Усі права захищено.",
     },

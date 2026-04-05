@@ -35,19 +35,26 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
   const [newProject, setNewProject] = useState({ title: "", description: "", link: "", image: "", category: "", file: null });
 
   useEffect(() => {
-    if (initialData) {
+    if (initialData || user) {
+      const sourceData = initialData?.data || {};
+      const sourceUser = user || {};
+
       setResume({
-        name: initialData.data?.name || "Name",
-        surname: initialData.data?.surname || "Surname",
-        profession: initialData.data?.profession || "",
-        bio: initialData.data?.bio || "",
-        avatar: initialData.data?.avatar || "",
-        projects: initialData.projects || [],
-        experiences: initialData.data?.experiences || [],
-        education: initialData.data?.education || [],
+        name: sourceData.name || sourceUser.name || sourceUser.userName?.split(' ')[0] || "Name",
+        surname: sourceData.surname || sourceUser.surname || sourceUser.userName?.split(' ')[1] || "Surname",
+        profession: sourceData.profession || sourceUser.profession || "",
+        bio: sourceData.bio || sourceUser.bio || "",
+        avatar: sourceData.avatar || sourceUser.avatar || "",
+        projects: initialData?.projects || [],
+        experiences: Array.isArray(sourceData.experiences) && sourceData.experiences.length > 0
+          ? sourceData.experiences
+          : (sourceUser.experiences || []),
+        education: Array.isArray(sourceData.education) && sourceData.education.length > 0
+          ? sourceData.education
+          : (sourceUser.education || []),
       });
     }
-  }, [initialData]);
+  }, [initialData, user]);
 
   const handleShare = () => {
     const viewUrl = `${window.location.origin}/view-portfolio/${id}`;
@@ -116,7 +123,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
     <div className="min-h-screen bg-gray-950 text-white font-sans selection:bg-indigo-500">
       
       {isOwner && !readOnly && (
-        <div className="fixed top-6 right-6 z-50 flex gap-3 print:hidden">
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:top-6 sm:right-6 z-50 flex flex-wrap justify-end gap-2 sm:gap-3 print:hidden">
           <button onClick={() => navigate(`/profile/${userId}`)} className="bg-gray-800 p-3 rounded-full border border-gray-700 hover:bg-gray-700 transition">
             <ArrowLeft size={20} />
           </button>
@@ -124,19 +131,19 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
             <Share2 size={20} />
           </button>
           {!isEditing ? (
-            <button onClick={() => setIsEditing(true)} className="bg-white text-black px-6 py-2 rounded-full flex items-center gap-2 font-bold shadow-xl hover:scale-105 transition">
+            <button onClick={() => setIsEditing(true)} className="bg-white text-black px-4 sm:px-6 py-2 rounded-full flex items-center gap-2 font-bold shadow-xl hover:scale-105 transition text-sm sm:text-base">
               <Edit3 size={18} /> {t.darkTemplate.edit}
             </button>
           ) : (
-            <button onClick={saveResume} disabled={loading} className="bg-indigo-600 text-white px-6 py-2 rounded-full flex items-center gap-2 font-bold hover:bg-indigo-700 shadow-lg transition">
+            <button onClick={saveResume} disabled={loading} className="bg-indigo-600 text-white px-4 sm:px-6 py-2 rounded-full flex items-center gap-2 font-bold hover:bg-indigo-700 shadow-lg transition text-sm sm:text-base">
               <Check size={18} /> {loading ? t.darkTemplate.saving : t.darkTemplate.saveChanges}
             </button>
           )}
         </div>
       )}
 
-      <header className="max-w-5xl mx-auto pt-24 pb-16 px-8 text-center">
-        <div className="relative w-40 h-40 mx-auto mb-8">
+      <header className="max-w-5xl mx-auto pt-20 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative w-28 h-28 sm:w-36 sm:h-36 lg:w-40 lg:h-40 mx-auto mb-6 sm:mb-8">
           <div className="w-full h-full rounded-full border-4 border-indigo-500/30 overflow-hidden bg-gray-800 flex items-center justify-center">
             {resume.avatar ? <img src={getFullImg(resume.avatar)} alt="User" className="w-full h-full object-cover" /> : <Camera size={48} className="text-gray-700" />}
           </div>
@@ -154,7 +161,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
 
         {isEditing ? (
           <div className="space-y-6 max-w-2xl mx-auto text-left">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 ml-1">{t.darkTemplate.firstName}</label>
                 <input value={resume.name} onChange={e => setResume({...resume, name: e.target.value})} className="bg-gray-900 border-b border-gray-800 p-3 outline-none focus:border-indigo-500 text-xl" />
@@ -175,14 +182,14 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
           </div>
         ) : (
           <>
-            <h1 className="text-5xl font-black mb-2 tracking-tight uppercase">{resume.name} {resume.surname}</h1>
-            <p className="text-xl text-indigo-400 font-bold mb-6 tracking-widest uppercase">{resume.profession}</p>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-2 tracking-tight uppercase break-words">{resume.name} {resume.surname}</h1>
+            <p className="text-lg sm:text-xl text-indigo-400 font-bold mb-6 tracking-widest uppercase break-words">{resume.profession}</p>
             <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed italic">"{resume.bio}"</p>
           </>
         )}
       </header>
 
-      <section className="max-w-7xl mx-auto py-20 px-8 grid md:grid-cols-2 gap-16 border-t border-gray-900">
+      <section className="max-w-7xl mx-auto py-14 sm:py-20 px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 border-t border-gray-900">
         <div className="space-y-8">
           <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter"><Briefcase className="text-indigo-500"/> {t.darkTemplate.experience}</h3>
           <div className="space-y-6">
@@ -191,7 +198,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                 <h4 className="text-xl font-bold">{exp.title}</h4>
                 <p className="text-indigo-400 text-sm mb-3">{exp.year}</p>
                 <p className="text-gray-500 text-sm">{exp.desc}</p>
-                {isEditing && <button onClick={() => setResume({...resume, experiences: resume.experiences.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><Trash2 size={18}/></button>}
+                {isEditing && <button onClick={() => setResume({...resume, experiences: resume.experiences.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"><Trash2 size={18}/></button>}
               </div>
             ))}
           </div>
@@ -214,13 +221,14 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                 <h4 className="text-xl font-bold">{edu.school}</h4>
                 <p className="text-indigo-400 text-sm mb-1">{edu.year}</p>
                 <p className="text-gray-500 text-sm">{edu.degree}</p>
-                {isEditing && <button onClick={() => setResume({...resume, education: resume.education.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition"><Trash2 size={18}/></button>}
+                {isEditing && <button onClick={() => setResume({...resume, education: resume.education.filter((_, i) => i !== idx)})} className="absolute top-4 right-4 text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"><Trash2 size={18}/></button>}
               </div>
             ))}
           </div>
           {isEditing && (
             <div className="p-6 bg-gray-900 rounded-2xl space-y-4 border border-indigo-500/20">
               <input placeholder={t.darkTemplate.placeholders.uni} value={newEdu.school} onChange={e => setNewEdu({...newEdu, school: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
+              <input placeholder={t.darkTemplate.placeholders.year} value={newEdu.year} onChange={e => setNewEdu({...newEdu, year: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
               <input placeholder={t.darkTemplate.placeholders.degree} value={newEdu.degree} onChange={e => setNewEdu({...newEdu, degree: e.target.value})} className="bg-transparent border-b border-gray-800 p-2 outline-none w-full focus:border-indigo-500" />
               <button onClick={() => { if(!newEdu.school) return; setResume({...resume, education: [...resume.education, newEdu]}); setNewEdu({school:"", year:"", degree:""})}} className="w-full bg-indigo-600 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-indigo-700 transition">
                 <Plus size={18}/> {t.darkTemplate.addEducation}
@@ -230,9 +238,9 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto py-20 px-8 border-t border-gray-900">
-        <h2 className="text-4xl font-black mb-12 uppercase tracking-tighter text-indigo-500">{t.darkTemplate.selectedProjects}</h2>
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+      <section className="max-w-7xl mx-auto py-14 sm:py-20 px-4 sm:px-6 lg:px-8 border-t border-gray-900">
+        <h2 className="text-3xl sm:text-4xl font-black mb-10 sm:mb-12 uppercase tracking-tighter text-indigo-500">{t.darkTemplate.selectedProjects}</h2>
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-8 mb-16">
           {resume.projects.map((p, idx) => (
             <div 
               key={p._id || idx} 
@@ -250,7 +258,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                     e.stopPropagation();
                     setResume({...resume, projects: resume.projects.filter((_, i) => i !== idx)});
                   }} 
-                  className="absolute top-4 right-4 z-20 p-2 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition shadow-lg"
+                  className="absolute top-4 right-4 z-20 p-2 bg-red-500 text-white rounded-xl opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition shadow-lg"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -262,7 +270,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                   <div className="w-full h-full flex items-center justify-center text-gray-700">{t.darkTemplate.noImage}</div>
                 )}
                 {!isEditing && p.link && (
-                  <div className="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-indigo-600/20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <ExternalLink size={32} className="text-white" />
                   </div>
                 )}
@@ -276,9 +284,9 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
         </div>
 
         {isEditing && isOwner && (
-          <div className="p-10 bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-800">
-            <h3 className="text-2xl font-black mb-10 text-center uppercase tracking-widest text-white">{t.darkTemplate.newProject}</h3>
-            <div className="grid md:grid-cols-2 gap-12 text-left">
+          <div className="p-4 sm:p-6 lg:p-10 bg-gray-900/50 rounded-[40px] border-2 border-dashed border-gray-800">
+            <h3 className="text-xl sm:text-2xl font-black mb-8 sm:mb-10 text-center uppercase tracking-widest text-white">{t.darkTemplate.newProject}</h3>
+            <div className="grid md:grid-cols-2 gap-8 sm:gap-12 text-left">
               <div className="space-y-6">
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 block mb-2">{t.darkTemplate.projectTitle}</label>
@@ -295,7 +303,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
               </div>
               <div className="flex flex-col">
                 <label className="text-[10px] font-black uppercase tracking-[2px] text-indigo-400 mb-2">{t.darkTemplate.projectCover}</label>
-                <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 rounded-3xl border-2 border-dashed border-gray-800 p-8 relative min-h-[300px]">
+                <div className="flex-1 flex flex-col items-center justify-center bg-gray-900 rounded-3xl border-2 border-dashed border-gray-800 p-5 sm:p-8 relative min-h-[240px] sm:min-h-[300px]">
                   {newProject.image ? (
                     <div className="relative w-full h-full">
                       <img src={newProject.image} className="h-full w-full object-cover rounded-2xl" alt="Preview" />
@@ -317,7 +325,7 @@ export default function DarkTemplate({ initialData, id: propId, readOnly = false
                 </div>
               </div>
             </div>
-            <button onClick={handleAddProjectToDB} disabled={loading} className="mt-12 w-full bg-indigo-600 text-white py-6 rounded-2xl font-black uppercase tracking-[4px] hover:bg-indigo-700 shadow-2xl transition disabled:bg-gray-800">
+            <button onClick={handleAddProjectToDB} disabled={loading} className="mt-10 sm:mt-12 w-full bg-indigo-600 text-white py-4 sm:py-6 rounded-2xl font-black uppercase tracking-[3px] sm:tracking-[4px] hover:bg-indigo-700 shadow-2xl transition disabled:bg-gray-800">
               {loading ? t.darkTemplate.processing : t.darkTemplate.createSync}
             </button>
           </div>

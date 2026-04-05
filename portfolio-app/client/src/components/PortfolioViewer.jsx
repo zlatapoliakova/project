@@ -58,7 +58,7 @@ function PortfolioViewer() {
   if (error || !portfolio) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-50 px-4">
-        <div className="bg-white p-10 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 text-center max-w-md">
+        <div className="bg-white p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 text-center max-w-md">
           <div className="bg-red-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 text-red-500">
             <AlertCircle size={32} />
           </div>

@@ -10,7 +10,11 @@ function TemplateCard({ template, onSelect }) {
   return (
     <div className="group bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col">
       
-      <div className="template-card-container cursor-pointer">
+      <button
+        type="button"
+        onClick={() => onSelect(template)}
+        className="template-card-container cursor-pointer text-left"
+      >
         
         <img
           src={template.image}
@@ -18,24 +22,20 @@ function TemplateCard({ template, onSelect }) {
           className="template-card-img"
         />
 
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect(template);
-            }}
-            className="bg-white text-gray-900 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition-transform scale-90 group-hover:scale-100"
+        <div className="absolute inset-0 bg-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10 p-4">
+          <span
+            className="bg-white text-gray-900 px-5 sm:px-6 py-3 rounded-lg font-bold transition-transform scale-100 sm:scale-90 sm:group-hover:scale-100 text-sm sm:text-base text-center"
           >
             {t.templates.selectBtn}
-          </button>
+          </span>
         </div>
-      </div>
+      </button>
 
-      <div className="p-5 bg-white z-20">
-        <h3 className="font-bold text-lg text-gray-900">
+      <div className="p-4 sm:p-5 bg-white z-20">
+        <h3 className="font-bold text-lg text-gray-900 break-words">
           {itemTranslation?.title || template.title}
         </h3>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 text-sm mt-1 break-words">
           {itemTranslation?.desc || t.templates.defaultDesc}
         </p>
       </div>

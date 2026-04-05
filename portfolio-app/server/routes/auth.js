@@ -8,6 +8,35 @@ import User from '../models/User.js';
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
 
+const normalizeExperiences = (experiences = []) =>
+  Array.isArray(experiences)
+    ? experiences
+        .filter(Boolean)
+        .map((exp) => ({
+          title: exp?.title || exp?.position || "",
+          year: exp?.year || exp?.years || "",
+        }))
+        .filter((exp) => exp.title || exp.year)
+    : [];
+
+const normalizeEducation = (education = []) =>
+  Array.isArray(education)
+    ? education
+        .filter(Boolean)
+        .map((edu) => ({
+          school: edu?.school || edu?.institution || "",
+          year: edu?.year || "",
+          degree: edu?.degree || "",
+        }))
+        .filter((edu) => edu.school || edu.year || edu.degree)
+    : [];
+
+const normalizeUserData = (payload = {}) => ({
+  ...payload,
+  experiences: normalizeExperiences(payload.experiences),
+  education: normalizeEducation(payload.education),
+});
+
 // РЕЄСТРАЦІЯ
 router.post('/register', async (req, res) => {
   try {
@@ -67,7 +96,7 @@ router.get('/me', async (req, res) => {
     const user = await User.findById(decoded.id).select('-password');
     if (!user) return res.status(404).json({ message: 'Користувача не знайдено' });
 
-    res.status(200).json({ user });
+    res.status(200).json({ user: normalizeUserData(user.toObject()) });
   } catch (error) {
     res.status(401).json({ message: 'Токен невалідний' });
   }
@@ -77,7 +106,7 @@ router.get('/me', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
-    res.status(200).json(user);
+    res.status(200).json(normalizeUserData(user?.toObject ? user.toObject() : user));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -86,12 +115,13 @@ router.get('/:id', async (req, res) => {
 // ОНОВЛЕННЯ ПРОФІЛЮ 
 router.put('/update/:id', async (req, res) => {
   try {
+    const normalizedPayload = normalizeUserData(req.body);
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id, 
-      { $set: req.body }, 
+      { $set: normalizedPayload }, 
       { returnDocument: 'after' } 
     ).select('-password');
-    res.status(200).json(updatedUser);
+    res.status(200).json(normalizeUserData(updatedUser?.toObject ? updatedUser.toObject() : updatedUser));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

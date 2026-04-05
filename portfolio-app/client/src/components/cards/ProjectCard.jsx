@@ -44,7 +44,7 @@ export default function ProjectCard({ project, onDelete, onClick }) {
               e.stopPropagation();
               if (projectId) onDelete(projectId);
             }}
-            className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-gray-400 z-10"
+            className="absolute top-3 right-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 hover:bg-red-50 hover:text-red-600 text-gray-400 z-10"
           >
             <Trash2 size={16} />
           </button>

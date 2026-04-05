@@ -28,22 +28,25 @@ function Templates() {
       return;
     }
 
-    const portfolioData = {
-      owner: userId,
-      template: template.id,
-      data: {
-        name: user.name || user.userName?.split(' ')[0] || "Name",
-        surname: user.surname || user.userName?.split(' ')[1] || "Surname",
-        avatar: user.avatar,
-        profession: user.profession || "",
-        bio: user.bio || "",
-        location: user.location || "",
-        experiences: user.experiences || [], 
-        education: user.education || [],
-      }
-    };
-
     try {
+      const userResponse = await fetch(`http://localhost:5000/api/auth/${userId}`);
+      const freshUser = userResponse.ok ? await userResponse.json() : user;
+
+      const portfolioData = {
+        owner: userId,
+        template: template.id,
+        data: {
+          name: freshUser?.name || freshUser?.userName?.split(' ')[0] || "Name",
+          surname: freshUser?.surname || freshUser?.userName?.split(' ')[1] || "Surname",
+          avatar: freshUser?.avatar || "",
+          profession: freshUser?.profession || "",
+          bio: freshUser?.bio || "",
+          location: freshUser?.location || "",
+          experiences: freshUser?.experiences || [], 
+          education: freshUser?.education || [],
+        }
+      };
+
       const response = await fetch("http://localhost:5000/api/portfolios/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,15 +71,17 @@ function Templates() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-8 py-16 flex-1">
-        <h1 className="text-4xl font-bold mb-3 text-gray-900 tracking-tight">
-          {t.templates.title}
-        </h1>
-        <p className="text-gray-500 mb-12 max-w-2xl">
-          {t.templates.subtitle}
-        </p>
+      <div className="max-w-7xl mx-auto w-full px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-16 flex-1">
+        <div className="mb-8 sm:mb-10 lg:mb-12">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 text-gray-900 tracking-tight">
+            {t.templates.title}
+          </h1>
+          <p className="text-sm sm:text-base text-gray-500 max-w-2xl">
+            {t.templates.subtitle}
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
           {templates.map((tpl) => (
             <TemplateCard 
               key={tpl.id} 

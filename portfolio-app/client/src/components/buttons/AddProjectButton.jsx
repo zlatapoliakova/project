@@ -22,10 +22,10 @@ function AddProjectButton({ userId, onSave }) {
         type="button"
         onClick={() => setIsModalOpen(true)}
         aria-label={t.header.addWork}
-        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-indigo-200/50 active:scale-95"
+        className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-indigo-200/50 active:scale-95 min-h-11 w-full sm:w-auto"
       >
         <Plus size={18} strokeWidth={2.5} />
-        <span className="hidden md:inline text-sm">{t.header.addWork}</span>
+        <span className="text-sm">{t.header.addWork}</span>
       </button>
 
       {isModalOpen && (

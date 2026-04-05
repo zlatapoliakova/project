@@ -9,12 +9,12 @@ function Footer() {
   if (!t) return null;
 
   return (
-    <footer className="bg-gray-900 text-gray-400 mt-20 rounded-t-[3rem] overflow-hidden">
-      <div className="max-w-7xl mx-auto px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-gray-800 pb-16">
+    <footer className="bg-gray-900 text-gray-400 mt-16 sm:mt-20 rounded-t-[2.25rem] sm:rounded-t-[3rem] overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-10 sm:gap-12 border-b border-gray-800 pb-10 sm:pb-16">
           
           <div className="col-span-1">
-            <h3 className="text-3xl font-black text-white mb-6 tracking-tighter">
+            <h3 className="text-2xl sm:text-3xl font-black text-white mb-6 tracking-tighter">
               Portify<span className="text-indigo-500">.</span>
             </h3>
             <p className="text-sm leading-relaxed mb-6">
@@ -99,9 +99,9 @@ function Footer() {
 
         </div>
 
-        <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] font-bold uppercase tracking-widest text-gray-500">
+        <div className="mt-8 sm:mt-12 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 text-[11px] font-bold uppercase tracking-widest text-gray-500 text-center md:text-left">
           <p>{t.footer.copyright}</p>
-          <div className="flex gap-10">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 md:gap-10">
             <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
             <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
             <a href="#" className="hover:text-white transition-colors">System Status</a>

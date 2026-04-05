@@ -90,10 +90,10 @@ export default function EditProjectModal({ project, onClose, onSave }) {
 
   return (
     <div onClick={onClose} className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] backdrop-blur-md p-4 animate-in fade-in duration-300">
-      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl p-8 w-full max-w-lg shadow-2xl relative max-h-[95vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-8">
+      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-[2rem] sm:rounded-3xl p-5 sm:p-8 w-full max-w-lg shadow-2xl relative max-h-[95vh] overflow-y-auto">
+        <div className="flex justify-between items-center gap-4 mb-6 sm:mb-8">
           <div>
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{t.modals.editProject}</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">{t.modals.editProject}</h2>
             <p className="text-gray-500 text-sm">{t.modals.updateDetails}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
@@ -110,7 +110,7 @@ export default function EditProjectModal({ project, onClose, onSave }) {
             <label className="text-[10px] font-black uppercase text-gray-400 ml-1">{t.modals.labels.image}</label>
             <div className={`group relative flex flex-col items-center p-2 border-2 border-dashed rounded-3xl transition-all ${errors.image ? 'border-red-300 bg-red-50' : 'border-gray-100 bg-gray-50 hover:border-indigo-300'}`}>
               {form.imagePreview ? (
-                <div className="relative w-full h-44">
+                <div className="relative w-full h-36 sm:h-44">
                   <img src={form.imagePreview} className="w-full h-full object-cover rounded-2xl shadow-sm" alt="preview" />
                   <div className="absolute inset-0 bg-black/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <p className="text-white text-xs font-bold">{t.modals.replaceImg}</p>

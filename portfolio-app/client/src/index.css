@@ -2,20 +2,31 @@
 
 .template-card-container {
     position: relative;
+    display: block;
+    width: 100%;
     height: 18rem;
-    /* h-72 */
     overflow: hidden;
+    background: #f8fafc;
 }
 
 .template-card-img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
     transition: transform 4s ease-in-out !important;
     transform: translateY(0);
     will-change: transform;
 }
 
-/* При наведенні на групу, картинка зсувається вгору на свою повну довжину мінус висота контейнера */
-.group:hover .template-card-img {
-    transform: translateY(calc(-100% + 18rem));
+@media (hover: hover) and (pointer: fine) {
+    .group:hover .template-card-img {
+        transform: translateY(calc(-100% + 18rem));
+    }
+}
+
+@media (max-width: 640px) {
+    .template-card-container {
+        height: 15rem;
+    }
 }

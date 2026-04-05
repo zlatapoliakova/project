@@ -33,8 +33,8 @@ function PortfolioEditor() {
     fetchPortfolio();
   }, [id, navigate]);
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading...</div>;
-  if (!portfolioData) return <div className="h-screen flex items-center justify-center">Portfolio not found</div>;
+  if (loading) return <div className="h-screen flex items-center justify-center px-4 text-center">Loading...</div>;
+  if (!portfolioData) return <div className="h-screen flex items-center justify-center px-4 text-center">Portfolio not found</div>;
 
   const props = { initialData: portfolioData, id };
 
